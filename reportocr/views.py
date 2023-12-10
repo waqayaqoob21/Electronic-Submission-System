@@ -191,3 +191,18 @@ class getQualificationReportAPIView(APIView):
     def get(self, request):
         result = ctrl_obj.getQualificationReport(request)
         return result
+
+
+class addExcelDataAPIVIEW(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        result = ctrl_obj.bulkInsert(request)
+        return result
+
+class getTreeDataAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        result = ctrl_obj.getTreeData(request)
+        return result

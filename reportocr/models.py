@@ -1,21 +1,16 @@
 from django.db import models
 
 class Ocr(models.Model):
-    # DOCUMENT_TYPE_CHOICES = [
-    #     ('BHD', 'BHD'),
-    #     ('BHD1', 'BHD1'),
-    # ]choices=DOCUMENT_TYPE_CHOICES
     document_type = models.CharField(max_length=300 )
-    BHD_No = models.CharField(max_length=300)
-    Job_Card_No = models.CharField(max_length=300)
-    Dated = models.DateTimeField(auto_now_add=False, null=True)
-    sys_type = models.CharField(max_length=300,null=True)
-    sys_name = models.CharField(max_length=300,null=True)
-    Type_of_System = models.CharField(max_length=300)
-    Batch_Set_NO = models.CharField(max_length=300)
-    Ref_Criteria = models.CharField(max_length=300)
-    Type_of_activity = models.CharField(max_length=300)
-    Status = models.CharField(max_length=300)
+    system_type = models.CharField(max_length=300,null=True)
+    system_name = models.CharField(max_length=300,null=True)
+    job_card_no = models.CharField(max_length=300,null=True)
+    batch_set_id = models.CharField(max_length=300, null=True)
+    bhd_no = models.CharField(max_length=300, null=True)
+    activity_type = models.CharField(max_length=300, null=True)
+    ref_criteria = models.CharField(max_length=300, null=True)
+    date = models.DateTimeField(auto_now_add=False, null=True)
+    status = models.CharField(max_length=300,null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
 

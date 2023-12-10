@@ -9,13 +9,16 @@ import random
 import pytesseract
 from PIL import Image
 from pdf2image import convert_from_path
-
+from django.db import connection
 from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
 import os, shutil
 import fitz
 import io
+import pandas as pd
+import itertools
+import math
 
 from .serializers import OcrSerializer, assembliesSerializer, sub_assembliesSerializer, qual_testSerializer, \
     getSetIdsBhdActivitySerializer, ocr_reportSerializer
@@ -29,34 +32,32 @@ class ocrController:
             OcrData = Ocr.objects.filter(BHD_No=request.get('BHD_No')).first()
             if OcrData is None:
                 ocrModel.document_type = request['document_type']
-                ocrModel.BHD_No = request['BHD_No']
-                ocrModel.Job_Card_No = request['Job_Card_No']
+                ocrModel.bhd_no = request['BHD_No']
+                ocrModel.job_card_no = request['Job_Card_No']
                 if request['Dated'] != '':
-                    ocrModel.Dated = request['Dated']
-                ocrModel.sys_type = request['sys_type']
-                ocrModel.sys_name = request['sys_name']
-                ocrModel.Type_of_System = request['Type_of_System']
-                ocrModel.Batch_Set_NO = request['Batch_Set_NO']
-                ocrModel.Ref_Criteria = request['Ref_Criteria']
-                ocrModel.Type_of_activity = request['Type_of_activity']
-                ocrModel.Status = request['status']
+                    ocrModel.date = request['Dated']
+                ocrModel.system_type = request['sys_type']
+                ocrModel.system_name = request['sys_name']
+                ocrModel.batch_set_id = request['Batch_Set_NO']
+                ocrModel.ref_criteria = request['Ref_Criteria']
+                ocrModel.activity_type = request['Type_of_activity']
+                ocrModel.status = request['status']
                 ocrModel.save()
                 return JsonResponse({'message': 'User added successfully', 'success': True, 'status': 201},
                                     status=201)
             else:
-                print("we are in the ediding part")
+                print("we are in the editing part")
                 ocrModel.document_type = request['document_type']
-                ocrModel.BHD_No = request['BHD_No']
-                ocrModel.Job_Card_No = request['Job_Card_No']
+                ocrModel.bhd_no = request['BHD_No']
+                ocrModel.job_card_no = request['Job_Card_No']
                 if request['Dated'] != '':
-                    ocrModel.Dated = request['Dated']
-                ocrModel.sys_type = request['sys_type']
-                ocrModel.sys_name = request['sys_name']
-                ocrModel.Type_of_System = request['Type_of_System']
-                ocrModel.Batch_Set_NO = request['Batch_Set_NO']
-                ocrModel.Ref_Criteria = request['Ref_Criteria']
-                ocrModel.Type_of_activity = request['Type_of_activity']
-                ocrModel.Status = request['status']
+                    ocrModel.date = request['Dated']
+                ocrModel.system_type = request['sys_type']
+                ocrModel.system_name = request['sys_name']
+                ocrModel.batch_set_id = request['Batch_Set_NO']
+                ocrModel.ref_criteria = request['Ref_Criteria']
+                ocrModel.activity_type = request['Type_of_activity']
+                ocrModel.status = request['status']
                 ocrModel.save()
                 return JsonResponse({'message': 'User Successfully Edited', 'success': True, 'status': 201},
                                     status=201)
@@ -433,7 +434,6 @@ class ocrController:
     @staticmethod
     def getAssemblies(request):
         try:
-            print(request)
             result = assemblies.objects.all()
             serializer = assembliesSerializer(result, many=True)
             result1 = batch_bhd_activity.objects.all()
@@ -655,6 +655,172 @@ class ocrController:
             serializer = ocr_reportSerializer(data, many=True)
             return JsonResponse(
                 {'message': 'record found', 'success': True, 'data': serializer.data, 'status': 201},
+                status=201)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'Server Error'}, status=500)
+
+
+    @staticmethod
+    def bulkInsert(request):
+        try:
+            excel_file = request.data['file']
+            df = pd.read_excel(excel_file)
+            assemblies_list = []
+            sub_assemblies_list = []
+            qualification_test_list = []
+            curr_assembly = ''
+            curr_sub_assembly = ''
+            temp_data_sa = ''
+            for (a, b, c) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest):
+                if math.isnan(a):
+                    curr_assembly = b
+                    assemblies_list.append(b)
+                if b not in sub_assemblies_list:
+                    curr_sub_assembly = b
+                    if math.isnan(a) and math.isnan(c):
+                        continue
+                    else:
+                        temp_data_sa = curr_assembly + '=' + b
+                    if temp_data_sa not in sub_assemblies_list:
+                        sub_assemblies_list.append(temp_data_sa)
+                if c != '':
+                    temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
+                    qualification_test_list.append(temp_data_qt)
+
+            for item in assemblies_list:
+                # print(item)
+                if item != '':
+                    check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
+                                                                     batch_set_id=request.data['batch_set_no'],
+                                                                     bhd_no=request.data['bhd_no'],
+                                                                     activity_type=request.data['activityType']).first()
+                    if check_record is None:
+                        row = batch_bhd_activity()
+                        row.system_name = request.data['sys_name']
+                        row.batch_set_id = request.data['batch_set_no']
+                        row.bhd_no = request.data['bhd_no']
+                        row.activity_type = request.data['activityType']
+                        row.title = request.data['title_name']
+                        row.date = request.data['ass_date']
+                        row.ref_criteria = request.data['reference_criteria']
+                        row.save()
+
+                    print("going to add assembly")
+                    # if check_record is None:
+                    modal = assemblies()
+                    modal.assembly_name = item
+                    modal.system_name = request.data['sys_name']
+                    modal.system_type = request.data['sys_type']
+                    modal.batch_set_id = request.data['batch_set_no']
+                    modal.bhd_no = request.data['bhd_no']
+                    modal.activity_type = request.data['activityType']
+                    modal.title = request.data['title_name']
+                    modal.date = request.data['ass_date']
+                    modal.ref_criteria = request.data['reference_criteria']
+                    modal.save()
+                    print("assembly saved")
+            for item in sub_assemblies_list:
+                # print(item)
+                if item != '':
+                    print("going to add sub assembly")
+                    modal = sub_assemblies()
+                    curr_ass = ''
+                    curr_sub_ass = ''
+                    if item.__contains__("="):
+                        print(item)
+                        curr_ass = item.split("=")[0]
+                        curr_sub_ass = item.split("=")[1]
+                    modal.assembly_name = curr_ass
+                    modal.sub_assembly_name = curr_sub_ass
+                    modal.system_name = request.data['sys_name']
+                    modal.system_type = request.data['sys_type']
+                    modal.batch_set_id = request.data['batch_set_no']
+                    modal.bhd_no = request.data['bhd_no']
+                    modal.activity_type = request.data['activityType']
+                    modal.title = request.data['title_name']
+                    modal.date = request.data['ass_date']
+                    modal.ref_criteria = request.data['reference_criteria']
+                    modal.save()
+                    print("sub assembly saved")
+
+            for item in qualification_test_list:
+                # print(item)
+                if item != '':
+                    print("going to add Qualification Test")
+                    modal = qualification_test()
+                    curr_ass = ''
+                    curr_sub_ass = ''
+                    curr_qt = ''
+                    temp = ''
+                    if item.__contains__("="):
+                        # print(item)
+                        curr_ass = item.split("=")[0]
+                        temp = item.split("=")[1]
+                    if temp.__contains__(":"):
+                        curr_sub_ass = temp.split(":")[0]
+                        curr_qt = temp.split(":")[1]
+                    modal.qualification_test = curr_qt
+                    modal.sub_assembly_name = curr_sub_ass
+                    modal.assembly_name = curr_ass
+                    modal.system_name = request.data['sys_name']
+                    modal.system_type = request.data['sys_type']
+                    modal.batch_set_id = request.data['batch_set_no']
+                    modal.bhd_no = request.data['bhd_no']
+                    modal.activity_type = request.data['activityType']
+                    modal.title = request.data['title_name']
+                    modal.date = request.data['ass_date']
+                    modal.ref_criteria = request.data['reference_criteria']
+                    modal.save()
+                    print("Qualification Test saved")
+            return JsonResponse({'message': "Record added", 'success': True, 'data': [], 'status': 200},
+                                status=200)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': "User do not created !", 'success': False, 'data': [], 'status': 500},
+                                status=500)
+
+    @staticmethod
+    def getTreeData(request):
+        try:
+            system_type = request.query_params['system_type']
+            system_name = request.query_params['system_name']
+            # tree_data = []
+            # cm_cursor = connection.cursor()
+            # cm_query = "SELECT ocr.system_type,ocr.system_name,ocr.activity_type,ocr.batch_set_id,ocr.title," \
+            #            "ocr.bhd_no,ocr.ref_criteria,ocr.date,ass.assembly_name,sub.sub_assembly_name,qt.qualification_test " \
+            #            "FROM reportocr_qualification_ocr_report ocr " \
+            #            "RIGHT JOIN reportocr_assemblies ass ON ass.system_name = ocr.system_name " \
+            #            "INNER JOIN reportocr_sub_assemblies sub ON sub.assembly_name = ass.assembly_name " \
+            #            "INNER JOIN reportocr_qualification_test qt ON qt.sub_assembly_name = sub.sub_assembly_name "\
+            #            "WHERE qt.system_type = '"+system_type+"' and qt.system_name= '"+system_name+"' ORDER BY qt.id ASC;"
+            # # data = Videos.objects.filter(user_id=id, is_pending=True)
+            # # if data:
+            # #     serializer = VideoSerializer(data, many=True)
+            # cm_cursor.execute(cm_query)
+            # cm_col_names = [col[0] for col in cm_cursor.description]
+            # for row in cm_cursor.fetchall():
+            #     row_dict = dict(zip(cm_col_names, row))
+            #     print(row_dict)
+            #     tree_data.append(row_dict)
+            ass_data = assemblies.objects.filter(system_type = system_type, system_name = system_name)
+            ass_serializer = assembliesSerializer(ass_data, many=True)
+            ass_tree_data = ass_serializer.data
+
+            sa_data = sub_assemblies.objects.filter(system_type = system_type, system_name = system_name)
+            sa_serializer = sub_assembliesSerializer(sa_data, many=True)
+            sa_tree_data = sa_serializer.data
+
+            qt_data = qualification_test.objects.filter(system_type = system_type, system_name = system_name)
+            qt_serializer = qual_testSerializer(qt_data, many=True)
+            qt_tree_data = qt_serializer.data
+            tree_data = {
+                'assemblies': ass_tree_data,
+                'sub_assemblies': sa_tree_data,
+                'qualification_test': qt_tree_data
+            }
+            return JsonResponse(
+                {'message': 'record found', 'success': True, 'data': tree_data, 'status': 201},
                 status=201)
         except Exception as e:
             print(e)
