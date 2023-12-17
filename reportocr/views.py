@@ -195,14 +195,12 @@ class getQualificationReportAPIView(APIView):
 
 class addExcelDataAPIVIEW(APIView):
     permission_classes = [AllowAny]
-
     def post(self, request):
         result = ctrl_obj.bulkInsert(request)
         return result
 
 class getTreeDataAPIView(APIView):
     permission_classes = [AllowAny]
-
     def get(self, request):
         result = ctrl_obj.getTreeData(request)
         return result
@@ -216,7 +214,12 @@ class checkReportAPIVIEW(APIView):
 
 class getScannedQualificationReportListAPIView(APIView):
     permission_classes = [AllowAny]
-
     def get(self, request):
         result = ctrl_obj.getScannedQualificationReportList(request)
+        return result
+
+class checkBatchNoAPIView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        result = ctrl_obj.checkBatchNo(request)
         return result

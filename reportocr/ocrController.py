@@ -12,7 +12,7 @@ from pdf2image import convert_from_path
 from django.db import connection
 from django.core.files.storage import FileSystemStorage
 from django.core.files.uploadedfile import InMemoryUploadedFile
-
+import string
 import os, shutil
 import fitz
 import io
@@ -627,7 +627,13 @@ class ocrController:
             modal = qualification_ocr_report()
             sys_name = request.data['sys_name']
             sys_type = request.data['sys_type']
-            scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,system_name=sys_name).first()
+            qualification_test = request.data['Q_test']
+            sub_assembly = request.data['sub_assembly_name']
+            assembly = request.data['assembly_name']
+            batch_no = request.data['batch_set_no']
+            scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,system_name=sys_name,
+                        assembly_name = assembly, sub_assembly_name = sub_assembly, qualification_test = qualification_test,
+                                                                        batch_set_id = batch_no).first()
             if scanned_report_list is None:
                 modal.ocr_report = request.data['ocr_reports']
                 modal.qualification_test = request.data['Q_test']
@@ -683,115 +689,128 @@ class ocrController:
     @staticmethod
     def bulkInsert(request):
         try:
-            excel_file = request.data['file']
-            df = pd.read_excel(excel_file)
-            assemblies_list = []
-            sub_assemblies_list = []
-            qualification_test_list = []
-            curr_assembly = ''
-            curr_sub_assembly = ''
-            temp_data_sa = ''
-            for (a, b, c) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest):
-                if math.isnan(a):
-                    curr_assembly = b
-                    assemblies_list.append(b)
-                if b not in sub_assemblies_list:
-                    curr_sub_assembly = b
-                    if math.isnan(a) and math.isnan(c):
-                        continue
-                    else:
-                        temp_data_sa = curr_assembly + '=' + b
-                    if temp_data_sa not in sub_assemblies_list:
-                        sub_assemblies_list.append(temp_data_sa)
-                if c != '':
-                    temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
-                    qualification_test_list.append(temp_data_qt)
+            if request.data['file'] != '':
+                excel_file = request.data['file']
+                df = pd.read_excel(excel_file)
+                assemblies_list = []
+                sub_assemblies_list = []
+                qualification_test_list = []
+                curr_assembly = ''
+                curr_sub_assembly = ''
+                temp_data_sa = ''
+                for (a, b, c) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest):
+                    if math.isnan(a):
+                        curr_assembly = b
+                        assemblies_list.append(b)
+                    if b not in sub_assemblies_list:
+                        curr_sub_assembly = b
+                        if math.isnan(a) and math.isnan(c):
+                            continue
+                        else:
+                            temp_data_sa = curr_assembly + '=' + b
+                        if temp_data_sa not in sub_assemblies_list:
+                            sub_assemblies_list.append(temp_data_sa)
+                    if c != '':
+                        temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
+                        qualification_test_list.append(temp_data_qt)
 
-            for item in assemblies_list:
-                # print(item)
-                if item != '':
-                    check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
-                                                                     batch_set_id=request.data['batch_set_no'],
-                                                                     bhd_no=request.data['bhd_no'],
-                                                                     activity_type=request.data['activityType']).first()
-                    if check_record is None:
-                        row = batch_bhd_activity()
-                        row.system_name = request.data['sys_name']
-                        row.batch_set_id = request.data['batch_set_no']
-                        row.bhd_no = request.data['bhd_no']
-                        row.activity_type = request.data['activityType']
-                        row.title = request.data['title_name']
-                        row.date = request.data['ass_date']
-                        row.ref_criteria = request.data['reference_criteria']
-                        row.save()
+                for item in assemblies_list:
+                    # print(item)
+                    if item != '':
+                        check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
+                                                                         batch_set_id=request.data['batch_set_no'],
+                                                                         bhd_no=request.data['bhd_no'],
+                                                                         activity_type=request.data['activityType']).first()
+                        if check_record is None:
+                            row = batch_bhd_activity()
+                            row.system_name = request.data['sys_name']
+                            row.batch_set_id = request.data['batch_set_no']
+                            row.bhd_no = request.data['bhd_no']
+                            row.activity_type = request.data['activityType']
+                            row.title = request.data['title_name']
+                            row.date = request.data['ass_date']
+                            row.ref_criteria = request.data['reference_criteria']
+                            row.save()
+                        print("going to add assembly")
+                        # if check_record is None:
+                        modal = assemblies()
+                        modal.assembly_name = item
+                        modal.system_name = request.data['sys_name']
+                        modal.system_type = request.data['sys_type']
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("assembly saved")
+                for item in sub_assemblies_list:
+                    # print(item)
+                    if item != '':
+                        print("going to add sub assembly")
+                        modal = sub_assemblies()
+                        curr_ass = ''
+                        curr_sub_ass = ''
+                        if item.__contains__("="):
+                            print(item)
+                            curr_ass = item.split("=")[0]
+                            curr_sub_ass = item.split("=")[1]
+                        modal.assembly_name = curr_ass
+                        modal.sub_assembly_name = curr_sub_ass
+                        modal.system_name = request.data['sys_name']
+                        modal.system_type = request.data['sys_type']
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("sub assembly saved")
 
-                    print("going to add assembly")
-                    # if check_record is None:
-                    modal = assemblies()
-                    modal.assembly_name = item
-                    modal.system_name = request.data['sys_name']
-                    modal.system_type = request.data['sys_type']
-                    modal.batch_set_id = request.data['batch_set_no']
-                    modal.bhd_no = request.data['bhd_no']
-                    modal.activity_type = request.data['activityType']
-                    modal.title = request.data['title_name']
-                    modal.date = request.data['ass_date']
-                    modal.ref_criteria = request.data['reference_criteria']
-                    modal.save()
-                    print("assembly saved")
-            for item in sub_assemblies_list:
-                # print(item)
-                if item != '':
-                    print("going to add sub assembly")
-                    modal = sub_assemblies()
-                    curr_ass = ''
-                    curr_sub_ass = ''
-                    if item.__contains__("="):
-                        print(item)
-                        curr_ass = item.split("=")[0]
-                        curr_sub_ass = item.split("=")[1]
-                    modal.assembly_name = curr_ass
-                    modal.sub_assembly_name = curr_sub_ass
-                    modal.system_name = request.data['sys_name']
-                    modal.system_type = request.data['sys_type']
-                    modal.batch_set_id = request.data['batch_set_no']
-                    modal.bhd_no = request.data['bhd_no']
-                    modal.activity_type = request.data['activityType']
-                    modal.title = request.data['title_name']
-                    modal.date = request.data['ass_date']
-                    modal.ref_criteria = request.data['reference_criteria']
-                    modal.save()
-                    print("sub assembly saved")
-
-            for item in qualification_test_list:
-                # print(item)
-                if item != '':
-                    print("going to add Qualification Test")
-                    modal = qualification_test()
-                    curr_ass = ''
-                    curr_sub_ass = ''
-                    curr_qt = ''
-                    temp = ''
-                    if item.__contains__("="):
-                        # print(item)
-                        curr_ass = item.split("=")[0]
-                        temp = item.split("=")[1]
-                    if temp.__contains__(":"):
-                        curr_sub_ass = temp.split(":")[0]
-                        curr_qt = temp.split(":")[1]
-                    modal.qualification_test = curr_qt
-                    modal.sub_assembly_name = curr_sub_ass
-                    modal.assembly_name = curr_ass
-                    modal.system_name = request.data['sys_name']
-                    modal.system_type = request.data['sys_type']
-                    modal.batch_set_id = request.data['batch_set_no']
-                    modal.bhd_no = request.data['bhd_no']
-                    modal.activity_type = request.data['activityType']
-                    modal.title = request.data['title_name']
-                    modal.date = request.data['ass_date']
-                    modal.ref_criteria = request.data['reference_criteria']
-                    modal.save()
-                    print("Qualification Test saved")
+                for item in qualification_test_list:
+                    # print(item)
+                    if item != '':
+                        print("going to add Qualification Test")
+                        modal = qualification_test()
+                        curr_ass = ''
+                        curr_sub_ass = ''
+                        curr_qt = ''
+                        temp = ''
+                        if item.__contains__("="):
+                            # print(item)
+                            curr_ass = item.split("=")[0]
+                            temp = item.split("=")[1]
+                        if temp.__contains__(":"):
+                            curr_sub_ass = temp.split(":")[0]
+                            curr_qt = temp.split(":")[1]
+                        modal.qualification_test = curr_qt
+                        modal.sub_assembly_name = curr_sub_ass
+                        modal.assembly_name = curr_ass
+                        modal.system_name = request.data['sys_name']
+                        modal.system_type = request.data['sys_type']
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Qualification Test saved")
+            else:
+                check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
+                                                                     batch_set_id = request.data['batch_set_no']).first()
+                if check_record is None:
+                    row = batch_bhd_activity()
+                    row.system_name = request.data['sys_name']
+                    row.batch_set_id = request.data['batch_set_no']
+                    row.bhd_no = request.data['bhd_no']
+                    row.activity_type = request.data['activityType']
+                    row.title = request.data['title_name']
+                    row.date = request.data['ass_date']
+                    row.ref_criteria = request.data['reference_criteria']
+                    row.save()
             return JsonResponse({'message': "Record added", 'success': True, 'data': [], 'status': 200},
                                 status=200)
         except Exception as e:
@@ -811,15 +830,24 @@ class ocrController:
             id_number = ''
             results = ''
             status = ''
-            # filename = "2014_Form_1120.pdf"
-            # attachment = request['uploaded_file']
+            fs = FileSystemStorage()
+            if not os.path.isdir('myScannedReports'):
+                os.mkdir('myScannedReports')
             # open file
             file: InMemoryUploadedFile = request['file']
+            batch_no = request['batch_no']
             idNumber = request['id_number']
             # define file_save_path variable
             # full_path = str(datetime.today()).replace('-', '').replace(' ', '') + '_' + file.name
             full_path = file.name
             save_file(file, full_path)
+            target_path = 'myScannedReports/'
+            shutil.copy(full_path, target_path)
+            prefix = ''.join(random.choice(string.ascii_letters) for i in range(10))
+            oldFilePath = target_path+full_path
+            newFIlePath = target_path+batch_no+'_'+prefix+'_'+full_path
+            os.rename(oldFilePath, newFIlePath)
+
             pdf_images = convert_from_path(full_path)
             for i in range(len(pdf_images)):
                 # Save pages as images in the pdf
@@ -870,7 +898,10 @@ class ocrController:
                     'report_number': report_number,
                     'id_number': id_number,
                     'status': status,
-                    'report_type': file.name
+                    'report_url': newFIlePath,
+                    'file_absolute_url': os.path.abspath(newFIlePath),
+                    'observation': '',
+                    'reference_criteria': ''
                 }
                 return JsonResponse(
                     {'message': 'Report found ', 'success': True, 'data': dict, 'status': 200},
@@ -916,12 +947,41 @@ class ocrController:
         try:
             system_type = request.query_params['system_type']
             system_name = request.query_params['system_name']
+            assembly = request.query_params['assembly']
+            sub_assembly = request.query_params['sub_assembly']
+            qualification_test = request.query_params['qualification_test']
             batch_no = request.query_params['batch_no']
-            data = qualification_ocr_report.objects.filter(system_name = system_name, batch_set_id = batch_no).first()
-            data = data.ocr_report
+            data = qualification_ocr_report.objects.filter(system_type=system_type,system_name = system_name,
+                    assembly_name = assembly, sub_assembly_name = sub_assembly, qualification_test = qualification_test,
+                                                           batch_set_id = batch_no).first()
+            reference_criteria = ''
+            ocr_data = ''
+            if data is None:
+                ocr_data = ''
+            else:
+                ocr_data = data.ocr_report
+                reference_criteria = data.ref_criteria
             return JsonResponse(
-                {'message': 'record found', 'success': True, 'data': data, 'status': 201},
+                {'message': 'record found', 'success': True, 'data': ocr_data,'ref_criteria':reference_criteria, 'status': 201},
                 status=201)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'Server Error'}, status=500)
+
+    @staticmethod
+    def checkBatchNo(request):
+        try:
+            system_type = request.query_params['system_type']
+            system_name = request.query_params['system_name']
+            data = assemblies.objects.filter(system_name = system_name).first()
+            if data is None:
+                return JsonResponse(
+                    {'message': 'record found', 'success': False, 'data': [], 'status': 201},
+                    status=201)
+            else:
+                return JsonResponse(
+                    {'message': 'record found', 'success': True, 'data': [], 'status': 403},
+                    status=201)
         except Exception as e:
             print(e)
             return JsonResponse({'message': 'Server Error'}, status=500)

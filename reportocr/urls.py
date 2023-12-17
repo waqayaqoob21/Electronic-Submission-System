@@ -38,5 +38,6 @@ urlpatterns = [
     path('getTreeData', getTreeDataAPIView.as_view(), name='getTreeData'),
     path('checkReport/', checkReportAPIVIEW.as_view(), name='checkReport'),
     path('getReportList', getScannedQualificationReportListAPIView.as_view(), name='getReportList'),
+    path('checkBatchNo', checkBatchNoAPIView.as_view(), name='checkBatchNo'),
 
 ]
