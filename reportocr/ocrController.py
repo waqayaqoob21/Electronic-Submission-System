@@ -625,23 +625,42 @@ class ocrController:
             print(request)
             print("going to add Qualification Report")
             modal = qualification_ocr_report()
-            # item['value']
-            modal.ocr_report = request.data['ocr_reports']
-            modal.qualification_test = request.data['Q_test']
-            modal.sub_assembly_name = request.data['sub_assembly_name']
-            modal.assembly_name = request.data['assembly_name']
-            modal.system_name = request.data['sys_name']
-            modal.system_type = request.data['sys_type']
-            modal.batch_set_id = request.data['batch_set_no']
-            modal.bhd_no = request.data['bhd_no']
-            modal.activity_type = request.data['activityType']
-            modal.title = request.data['title_name']
-            modal.date = request.data['ass_date']
-            modal.ref_criteria = request.data['reference_criteria']
-            modal.save()
-            print("Qualification Report saved")
-
-            return JsonResponse({'message': "Record added", 'success': True, 'data': [], 'status': 200},
+            sys_name = request.data['sys_name']
+            sys_type = request.data['sys_type']
+            scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,system_name=sys_name).first()
+            if scanned_report_list is None:
+                modal.ocr_report = request.data['ocr_reports']
+                modal.qualification_test = request.data['Q_test']
+                modal.sub_assembly_name = request.data['sub_assembly_name']
+                modal.assembly_name = request.data['assembly_name']
+                modal.system_name = request.data['sys_name']
+                modal.system_type = request.data['sys_type']
+                modal.batch_set_id = request.data['batch_set_no']
+                modal.bhd_no = request.data['bhd_no']
+                modal.activity_type = request.data['activityType']
+                modal.title = request.data['title_name']
+                modal.date = request.data['ass_date']
+                modal.ref_criteria = request.data['reference_criteria']
+                modal.save()
+                print("Qualification Report saved")
+                return JsonResponse({'message': "Record added", 'success': True, 'data': [], 'status': 200},
+                                status=200)
+            else:
+                scanned_report_list.ocr_report = request.data['ocr_reports']
+                scanned_report_list.qualification_test = request.data['Q_test']
+                scanned_report_list.sub_assembly_name = request.data['sub_assembly_name']
+                scanned_report_list.assembly_name = request.data['assembly_name']
+                scanned_report_list.system_name = request.data['sys_name']
+                scanned_report_list.system_type = request.data['sys_type']
+                scanned_report_list.batch_set_id = request.data['batch_set_no']
+                scanned_report_list.bhd_no = request.data['bhd_no']
+                scanned_report_list.activity_type = request.data['activityType']
+                scanned_report_list.title = request.data['title_name']
+                scanned_report_list.date = request.data['ass_date']
+                scanned_report_list.ref_criteria = request.data['reference_criteria']
+                scanned_report_list.save()
+                print("Qualification Report saved")
+                return JsonResponse({'message': "Record updated successfully!", 'success': True, 'data': [], 'status': 200},
                                 status=200)
         except Exception as e:
             print(e)
@@ -781,28 +800,95 @@ class ocrController:
                                 status=500)
 
     @staticmethod
+    def reportCheck(request):
+        try:
+            def save_file(file: InMemoryUploadedFile, full_path):
+                with open(full_path, 'wb+') as f:
+                    for chunk in file.chunks():
+                        f.write(chunk)
+
+            report_number = ''
+            id_number = ''
+            results = ''
+            status = ''
+            # filename = "2014_Form_1120.pdf"
+            # attachment = request['uploaded_file']
+            # open file
+            file: InMemoryUploadedFile = request['file']
+            idNumber = request['id_number']
+            # define file_save_path variable
+            # full_path = str(datetime.today()).replace('-', '').replace(' ', '') + '_' + file.name
+            full_path = file.name
+            save_file(file, full_path)
+            pdf_images = convert_from_path(full_path)
+            for i in range(len(pdf_images)):
+                # Save pages as images in the pdf
+                pdf_images[i].save('page' + str(i) + '.jpg', 'JPEG')
+
+            # load all images and extract text from each page
+            mydist = {}
+            for i in range(len(pdf_images)):
+                if i == 0:
+                    # path_to_tesseract = "/usr/bin/tesseract"  # r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+                    path_to_tesseract = r"\usr\bin\tesseract"
+                    image_path = r"page" + str(i) + ".jpg"  # r"page0.jpg"
+                    img = Image.open(image_path)
+                    pytesseract.tesseract_cmd = path_to_tesseract
+                    text = pytesseract.image_to_string(img)
+                    data = text.split("\n")
+                    final_list = data  # [y for x in data for y in x.split(':')]
+                    print(final_list)
+
+                    for item in final_list:
+                        if item.__contains__("ID No:") or item.__contains__("id no:"):
+                            print(item)
+                            id_number = item.split("ID No:")[1]
+                        if item.__contains__("Test Report No:") or item.__contains__("test report no."):
+                            print(item)
+                            report_number = item.split("Test Report No:")[1]
+                        # if item.__contains__("Status:") or item.__contains__("test report no."):
+                        #     print(item)
+                        #     id_number = item.split("Test Report No:")[1]
+                        if item.__contains__("Results") or item.__contains__("results"):
+                            print(item)
+                            results = item.split("Results ® ")[1]
+                            break
+
+                        if item.__contains__("Status") or item.__contains__("status"):
+                            print(item)
+                            status = item.split("Status:")[1]
+            for i in range(len(pdf_images)):
+                image_path = r"page" + str(i) + ".jpg"
+                os.remove(image_path)
+
+            # remove pdf file
+            os.remove(full_path)
+            dict = ""
+            if idNumber in id_number:
+                dict = {
+                    'results': results,
+                    'report_number': report_number,
+                    'id_number': id_number,
+                    'status': status,
+                    'report_type': file.name
+                }
+                return JsonResponse(
+                    {'message': 'Report found ', 'success': True, 'data': dict, 'status': 200},
+                    status=200)
+            else:
+                return JsonResponse(
+                    {'message': 'Report not found ', 'success': False, 'data': [], 'status': 403},
+                    status=403)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'OCr could not perform'}, status=500)
+
+    @staticmethod
     def getTreeData(request):
         try:
             system_type = request.query_params['system_type']
             system_name = request.query_params['system_name']
-            # tree_data = []
-            # cm_cursor = connection.cursor()
-            # cm_query = "SELECT ocr.system_type,ocr.system_name,ocr.activity_type,ocr.batch_set_id,ocr.title," \
-            #            "ocr.bhd_no,ocr.ref_criteria,ocr.date,ass.assembly_name,sub.sub_assembly_name,qt.qualification_test " \
-            #            "FROM reportocr_qualification_ocr_report ocr " \
-            #            "RIGHT JOIN reportocr_assemblies ass ON ass.system_name = ocr.system_name " \
-            #            "INNER JOIN reportocr_sub_assemblies sub ON sub.assembly_name = ass.assembly_name " \
-            #            "INNER JOIN reportocr_qualification_test qt ON qt.sub_assembly_name = sub.sub_assembly_name "\
-            #            "WHERE qt.system_type = '"+system_type+"' and qt.system_name= '"+system_name+"' ORDER BY qt.id ASC;"
-            # # data = Videos.objects.filter(user_id=id, is_pending=True)
-            # # if data:
-            # #     serializer = VideoSerializer(data, many=True)
-            # cm_cursor.execute(cm_query)
-            # cm_col_names = [col[0] for col in cm_cursor.description]
-            # for row in cm_cursor.fetchall():
-            #     row_dict = dict(zip(cm_col_names, row))
-            #     print(row_dict)
-            #     tree_data.append(row_dict)
+
             ass_data = assemblies.objects.filter(system_type = system_type, system_name = system_name)
             ass_serializer = assembliesSerializer(ass_data, many=True)
             ass_tree_data = ass_serializer.data
@@ -821,6 +907,20 @@ class ocrController:
             }
             return JsonResponse(
                 {'message': 'record found', 'success': True, 'data': tree_data, 'status': 201},
+                status=201)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'Server Error'}, status=500)
+    @staticmethod
+    def getScannedQualificationReportList(request):
+        try:
+            system_type = request.query_params['system_type']
+            system_name = request.query_params['system_name']
+            batch_no = request.query_params['batch_no']
+            data = qualification_ocr_report.objects.filter(system_name = system_name, batch_set_id = batch_no).first()
+            data = data.ocr_report
+            return JsonResponse(
+                {'message': 'record found', 'success': True, 'data': data, 'status': 201},
                 status=201)
         except Exception as e:
             print(e)

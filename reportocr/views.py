@@ -206,3 +206,17 @@ class getTreeDataAPIView(APIView):
     def get(self, request):
         result = ctrl_obj.getTreeData(request)
         return result
+
+class checkReportAPIVIEW(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        result = ctrl_obj.reportCheck(request.data)
+        return result
+
+class getScannedQualificationReportListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        result = ctrl_obj.getScannedQualificationReportList(request)
+        return result

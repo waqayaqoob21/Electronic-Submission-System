@@ -36,5 +36,7 @@ urlpatterns = [
     path('searchOcrReport', searchOcrReportAPIView.as_view(), name='searchOcrReport'),
     path('addExcelData/', addExcelDataAPIVIEW.as_view(), name='addExcelData'),
     path('getTreeData', getTreeDataAPIView.as_view(), name='getTreeData'),
+    path('checkReport/', checkReportAPIVIEW.as_view(), name='checkReport'),
+    path('getReportList', getScannedQualificationReportListAPIView.as_view(), name='getReportList'),
 
 ]

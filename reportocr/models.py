@@ -13,7 +13,6 @@ class Ocr(models.Model):
     status = models.CharField(max_length=300,null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
-
 class assemblies(models.Model):
     id = models.AutoField(primary_key=True)
     system_type = models.CharField(max_length=300)
@@ -60,8 +59,6 @@ class qualification_test(models.Model):
     date = models.DateTimeField(auto_now_add=False, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now_add=False, null=True)
-
-
 
 class batch_bhd_activity(models.Model):
     id = models.AutoField(primary_key=True)
