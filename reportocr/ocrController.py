@@ -19,10 +19,9 @@ import io
 import pandas as pd
 import itertools
 import math
-
 from .serializers import OcrSerializer, assembliesSerializer, sub_assembliesSerializer, qual_testSerializer, \
     getSetIdsBhdActivitySerializer, ocr_reportSerializer
-
+import PyPDF2
 
 class ocrController:
     @staticmethod
@@ -969,17 +968,16 @@ class ocrController:
             return JsonResponse({'message': 'Server Error'}, status=500)
 
     @staticmethod
-    def checkBatchNo(request):
+    def downloadFile(request):
         try:
-            system_type = request.query_params['system_type']
-            system_name = request.query_params['system_name']
-            data = assemblies.objects.filter(system_name = system_name).first()
-            if data is None:
-                return JsonResponse(
-                    {'message': 'record found', 'success': False, 'data': [], 'status': 201},
-                    status=201)
-            else:
-                return JsonResponse(
+            url = request['url']
+            # response = requests.get(url)
+            file_name = ''
+            if url.__contains__("myScannedReports/"):
+                file_name = url.split("myScannedReports/")[1]
+            fileReader = PyPDF2.PdfFileReader(open(url, 'rb'))
+            print(fileReader)
+            return JsonResponse(
                     {'message': 'record found', 'success': True, 'data': [], 'status': 403},
                     status=201)
         except Exception as e:

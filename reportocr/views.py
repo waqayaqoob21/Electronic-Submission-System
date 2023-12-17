@@ -223,3 +223,9 @@ class checkBatchNoAPIView(APIView):
     def get(self, request):
         result = ctrl_obj.checkBatchNo(request)
         return result
+
+class DownloadFileAPIView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        result = ctrl_obj.downloadFile(request.data)
+        return result
