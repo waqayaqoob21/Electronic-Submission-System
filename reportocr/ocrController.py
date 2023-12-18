@@ -840,6 +840,8 @@ class ocrController:
             # open file
             file: InMemoryUploadedFile = request['file']
             batch_no = request['batch_no']
+            report_observation = request['report_observation']
+            report_remarks = request['report_remarks']
             idNumber = request['id_number']
             # define file_save_path variable
             # full_path = str(datetime.today()).replace('-', '').replace(' ', '') + '_' + file.name
@@ -849,7 +851,8 @@ class ocrController:
             shutil.copy(full_path, target_path)
             prefix = ''.join(random.choice(string.ascii_letters) for i in range(10))
             oldFilePath = target_path+full_path
-            newFIlePath = target_path+batch_no+'_'+prefix+'_'+full_path
+            newFileName = batch_no+'_'+prefix+'_'+full_path
+            newFIlePath = target_path+newFileName
             os.rename(oldFilePath, newFIlePath)
 
             pdf_images = convert_from_path(full_path)
@@ -872,26 +875,34 @@ class ocrController:
                     print(final_list)
 
                     for item in final_list:
-                        if item.__contains__("ID No:") or item.__contains__("id no:") or item.__contains__("ID No.") or item.__contains__("id no.") or item.__contains__("ID No.") or item.__contains__("ID NO") or item.__contains__("ID NO.") or item.__contains__("Part ID") or item.__contains__("Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__("Sample ID") or item.__contains__("Identity No") or item.__contains__("Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__("Module Name & ID No"):
-                            print(item)
-                            id_number = item.split(":")[item.split(":").__len__()-1]
-                        if item.__contains__("Test Report No:") or item.__contains__("test report no.") or item.__contains__("Test Report No:") or item.__contains__("test report no:") or item.__contains__("Test Report No.") or item.__contains__("Test Report No") or item.__contains__("Report Number") or item.__contains__("Report #") or item.__contains__("Report ID") or item.__contains__("Report ID.") or item.__contains__("Report Id") or item.__contains__("Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
-                            print(item)
-                            report_number = item.split(":")[item.split(":").__len__()-1]
-                        # if item.__contains__("Status:") or item.__contains__("test report no."):
-                        #     print(item)
-                        #     id_number = item.split("Test Report No:")[1]
-                        if item.__contains__("Results") or item.__contains__("results") or item.__contains__("Results") or item.__contains__("results") or item.__contains__("Test Results") or item.__contains__("Test Result") or item.__contains__("Expert") or item.__contains__("Review") or item.__contains__("Results") or item.__contains__("Result") or item.__contains__("Status") or item.__contains__("Measurement Status") or item.__contains__("Result(s)") or item.__contains__("Result (s)") or item.__contains__("Result(S)") or item.__contains__("Result (S)"):
-                            print(item)
-                            results = item.split("Results ® ")[1]
-                            break
+                        if item.__contains__("Product Delivery Form (PDF)") or item.__contains__("Product Delivery Form"):
+                            return JsonResponse(
+                                {'message': 'Report not found', 'success': False, 'data': dict, 'status': 403},
+                                status=403)
+                        else:
+                            if item.__contains__("ID No:") or item.__contains__("id no:") or item.__contains__("ID No.") or item.__contains__("id no.") or item.__contains__("ID No.") or item.__contains__("ID NO") or item.__contains__("ID NO.") or item.__contains__("Part ID") or item.__contains__("Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__("Sample ID") or item.__contains__("Identity No") or item.__contains__("Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__("Module Name & ID No"):
+                                print(item)
+                                id_number = item.split(":")[item.split(":").__len__()-1]
+                            if item.__contains__("Test Report No:") or item.__contains__("test report no.") or item.__contains__("Test Report No:") or item.__contains__("test report no:") or item.__contains__("Test Report No.") or item.__contains__("Test Report No") or item.__contains__("Report Number") or item.__contains__("Report #") or item.__contains__("Report ID") or item.__contains__("Report ID.") or item.__contains__("Report Id") or item.__contains__("Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
+                                print(item)
+                                report_number = item.split(":")[item.split(":").__len__()-1]
+                            # if item.__contains__("Status:") or item.__contains__("test report no."):
+                            #     print(item)
+                            #     id_number = item.split("Test Report No:")[1]
+                            if item.__contains__("Results") or item.__contains__("results") or item.__contains__("Results") or item.__contains__("results") or item.__contains__("Test Results") or item.__contains__("Test Result") or item.__contains__("Expert") or item.__contains__("Review") or item.__contains__("Results") or item.__contains__("Result") or item.__contains__("Status") or item.__contains__("Measurement Status") or item.__contains__("Result(s)") or item.__contains__("Result (s)") or item.__contains__("Result(S)") or item.__contains__("Result (S)"):
+                                print(item)
+                                results = item.split("Results ® ")[1]
+                                break
 
-                        if item.__contains__("Status") or item.__contains__("status"):
-                            print(item)
-                            status = item.split(":")[item.split(":").__len__()-1]
+                            if item.__contains__("Status") or item.__contains__("status"):
+                                print(item)
+                                status = item.split(":")[item.split(":").__len__()-1]
 
-                        if item.__contains__("Qualification Criteria") or item.__contains__("Compliance Statement") or item.__contains__("Qualification  Standard") or item.__contains__("Qualification Procedure") or item.__contains__("Qualification/Acceptance Criteria") or item.__contains__("Qualification/Accep. Criteria") or item.__contains__("Qualification / Acceptance Criteria") or item.__contains__("Qualification / Accep. Criteria") or item.__contains__("Test Criteria/Standard") or item.__contains__("Test Criteria / Standard") or item.__contains__("Reference") or item.__contains__("Ref. Document No.") or item.__contains__("Ref Document No") or item.__contains__("Acceptance Criteria No./Dwg.No.") or item.__contains__("Acceptance Criteria No. / Dwg.No."):
-                            qaualification_criteria = item.split(":")[item.split(":").__len__()-1]
+                            if item.__contains__("Qualification Criteria") or item.__contains__("Compliance Statement") or item.__contains__("Qualification  Standard") or item.__contains__("Qualification Standard | ") or item.__contains__("Qualification Procedure") or item.__contains__("Qualification/Acceptance Criteria") or item.__contains__("Qualification/Accep. Criteria") or item.__contains__("Qualification / Acceptance Criteria") or item.__contains__("Qualification / Accep. Criteria") or item.__contains__("Test Criteria/Standard") or item.__contains__("Test Criteria / Standard") or item.__contains__("Reference") or item.__contains__("Ref. Document No.") or item.__contains__("Ref Document No") or item.__contains__("Acceptance Criteria No./Dwg.No.") or item.__contains__("Acceptance Criteria No. / Dwg.No."):
+                                if item.__contains__("Qualification Standard | "):
+                                    qaualification_criteria = item.split(" | ")[item.split(" | ").__len__() - 1]
+                                else:
+                                    qaualification_criteria = item.split(":")[item.split(":").__len__()-1]
 
             for i in range(len(pdf_images)):
                 image_path = r"page" + str(i) + ".jpg"
@@ -905,11 +916,10 @@ class ocrController:
                     'results': results,
                     'report_number': report_number,
                     'id_number': id_number,
-                    'status': status,
-                    'report_url': newFIlePath,
+                    'report_url': newFileName,
                     'file_absolute_url': os.path.abspath(newFIlePath),
-                    'observation': '',
-                    'reference_criteria': '',
+                    'observation': report_observation,
+                    'remarks': report_remarks,
                     'qaualification_criteria': qaualification_criteria
                 }
                 return JsonResponse(
