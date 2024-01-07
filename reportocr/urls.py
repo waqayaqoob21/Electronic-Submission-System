@@ -40,5 +40,6 @@ urlpatterns = [
     path('getReportList', getScannedQualificationReportListAPIView.as_view(), name='getReportList'),
     path('checkBatchNo', checkBatchNoAPIView.as_view(), name='checkBatchNo'),
     path('downloadFile', DownloadFileAPIView.as_view(), name='downloadFile'),
+    path('getBatchList/', getBatchListListAPIView.as_view(), name='getBatchList'),
 
 ]

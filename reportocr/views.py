@@ -239,3 +239,10 @@ class DownloadFileAPIView(APIView):
     def get(self, request):
         result = ctrl_obj.downloadFile(request)
         return result
+
+class getBatchListListAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        result = ctrl_obj.getBatchList(request)
+        return result

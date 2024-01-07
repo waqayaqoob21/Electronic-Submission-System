@@ -4,7 +4,6 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 import uuid
 
-
 from usermanagement.serializer import *
 from .models import *
 from django.db.models import F, Q
@@ -26,6 +25,7 @@ import math
 from .serializers import OcrSerializer, assembliesSerializer, sub_assembliesSerializer, qual_testSerializer, \
     getSetIdsBhdActivitySerializer, ocr_reportSerializer
 import PyPDF2
+
 
 class ocrController:
     @staticmethod
@@ -307,7 +307,7 @@ class ocrController:
                     return ~Q(**kwargs)
 
             total_filter_objects = Q()
-            if system_type != '' :
+            if system_type != '':
                 total_filter_objects &= get_filter(
                     'system_type', 'equal',
                     system_type)
@@ -354,8 +354,6 @@ class ocrController:
                 total_filter_objects &= get_filter(
                     'ref_criteria', 'equal',
                     ref_creiteria)
-
-
 
             result = qualification_ocr_report.objects.filter(total_filter_objects)
             serializer = ocr_reportSerializer(result, many=True)
@@ -526,13 +524,30 @@ class ocrController:
 
                     for item in final_list:
 
-                        if item.__contains__("Test Report No:") or item.__contains__("test report no:") or item.__contains__("Test Report No.") or item.__contains__("Test Report No") or item.__contains__("Report Number") or item.__contains__("Report #") or item.__contains__("Report ID") or item.__contains__("Report ID.") or item.__contains__("Report Id") or item.__contains__("Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
+                        if item.__contains__("Test Report No:") or item.__contains__(
+                                "test report no:") or item.__contains__("Test Report No.") or item.__contains__(
+                                "Test Report No") or item.__contains__("Report Number") or item.__contains__(
+                                "Report #") or item.__contains__("Report ID") or item.__contains__(
+                                "Report ID.") or item.__contains__("Report Id") or item.__contains__(
+                                "Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
                             print(item)
                             report_number = item.split(":")[1]
-                        if item.__contains__("ID No.") or item.__contains__("id no.") or item.__contains__("ID No.") or item.__contains__("ID NO") or item.__contains__("ID NO.") or item.__contains__("Part ID") or item.__contains__("Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__("Sample ID") or item.__contains__("Identity No") or item.__contains__("Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__("Module Name & ID No"):
+                        if item.__contains__("ID No.") or item.__contains__("id no.") or item.__contains__(
+                                "ID No.") or item.__contains__("ID NO") or item.__contains__(
+                                "ID NO.") or item.__contains__("Part ID") or item.__contains__(
+                                "Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__(
+                                "Sample ID") or item.__contains__("Identity No") or item.__contains__(
+                                "Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__(
+                                "Module Name & ID No"):
                             print(item)
                             id_number = item.split("ID No.:")[1]
-                        if item.__contains__("Results") or item.__contains__("results") or item.__contains__("Test Results") or item.__contains__("Test Result") or item.__contains__("Expert") or item.__contains__("Review") or item.__contains__("Results") or item.__contains__("Result") or item.__contains__("Status") or item.__contains__("Measurement Status") or item.__contains__("Result(s)") or item.__contains__("Result (s)") or item.__contains__("Result(S)") or item.__contains__("Result (S)"):
+                        if item.__contains__("Results") or item.__contains__("results") or item.__contains__(
+                                "Test Results") or item.__contains__("Test Result") or item.__contains__(
+                                "Expert") or item.__contains__("Review") or item.__contains__(
+                                "Results") or item.__contains__("Result") or item.__contains__(
+                                "Status") or item.__contains__("Measurement Status") or item.__contains__(
+                                "Result(s)") or item.__contains__("Result (s)") or item.__contains__(
+                                "Result(S)") or item.__contains__("Result (S)"):
                             print(item)
                             result_status = item.split("Results:")[1]
 
@@ -634,9 +649,11 @@ class ocrController:
             sub_assembly = request.data['sub_assembly_name']
             assembly = request.data['assembly_name']
             batch_no = request.data['batch_set_no']
-            scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,system_name=sys_name,
-                        assembly_name = assembly, sub_assembly_name = sub_assembly, qualification_test = qualification_test,
-                                                                        batch_set_id = batch_no).first()
+            scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                                                                          assembly_name=assembly,
+                                                                          sub_assembly_name=sub_assembly,
+                                                                          qualification_test=qualification_test,
+                                                                          batch_set_id=batch_no).first()
             if scanned_report_list is None:
                 modal.ocr_report = request.data['ocr_reports']
                 modal.qualification_test = request.data['Q_test']
@@ -653,7 +670,7 @@ class ocrController:
                 modal.save()
                 print("Qualification Report saved")
                 return JsonResponse({'message': "Record added", 'success': True, 'data': [], 'status': 200},
-                                status=200)
+                                    status=200)
             else:
                 scanned_report_list.ocr_report = request.data['ocr_reports']
                 scanned_report_list.qualification_test = request.data['Q_test']
@@ -669,8 +686,9 @@ class ocrController:
                 scanned_report_list.ref_criteria = request.data['reference_criteria']
                 scanned_report_list.save()
                 print("Qualification Report saved")
-                return JsonResponse({'message': "Record updated successfully!", 'success': True, 'data': [], 'status': 200},
-                                status=200)
+                return JsonResponse(
+                    {'message': "Record updated successfully!", 'success': True, 'data': [], 'status': 200},
+                    status=200)
         except Exception as e:
             print(e)
             return JsonResponse({'message': "User do not created !", 'success': False, 'data': [], 'status': 500},
@@ -687,7 +705,6 @@ class ocrController:
         except Exception as e:
             print(e)
             return JsonResponse({'message': 'Server Error'}, status=500)
-
 
     @staticmethod
     def bulkInsert(request):
@@ -723,7 +740,8 @@ class ocrController:
                         check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
                                                                          batch_set_id=request.data['batch_set_no'],
                                                                          bhd_no=request.data['bhd_no'],
-                                                                         activity_type=request.data['activityType']).first()
+                                                                         activity_type=request.data[
+                                                                             'activityType']).first()
                         if check_record is None:
                             row = batch_bhd_activity()
                             row.system_name = request.data['sys_name']
@@ -803,7 +821,7 @@ class ocrController:
                         print("Qualification Test saved")
             else:
                 check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
-                                                                     batch_set_id = request.data['batch_set_no']).first()
+                                                                 batch_set_id=request.data['batch_set_no']).first()
                 if check_record is None:
                     row = batch_bhd_activity()
                     row.system_name = request.data['sys_name']
@@ -850,9 +868,9 @@ class ocrController:
             target_path = 'myScannedReports/'
             shutil.copy(full_path, target_path)
             prefix = ''.join(random.choice(string.ascii_letters) for i in range(10))
-            oldFilePath = target_path+full_path
-            newFileName = batch_no+'_'+prefix+'_'+full_path
-            newFIlePath = target_path+newFileName
+            oldFilePath = target_path + full_path
+            newFileName = batch_no + '_' + prefix + '_' + full_path
+            newFIlePath = target_path + newFileName
             os.rename(oldFilePath, newFIlePath)
 
             pdf_images = convert_from_path(full_path)
@@ -875,40 +893,81 @@ class ocrController:
                     print(final_list)
 
                     for item in final_list:
-                        if item.__contains__("Product Delivery Form (PDF)") or item.__contains__("Product Delivery Form"):
+                        if item.__contains__("Product Delivery Form (PDF)") or item.__contains__(
+                                "Product Delivery Form"):
                             return JsonResponse(
                                 {'message': 'Report not found', 'success': False, 'data': dict, 'status': 403},
                                 status=403)
                         else:
-                            #print("report is not Product Delivery Form ")
-                            if item.__contains__("ID No:") or item.__contains__("id no:") or item.__contains__("ID No.") or item.__contains__("id no.") or item.__contains__("ID No.") or item.__contains__("ID NO") or item.__contains__("ID NO.") or item.__contains__("Part ID") or item.__contains__("Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__("Sample ID") or item.__contains__("Identity No") or item.__contains__("Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__("Module Name & ID No"):
+                            # print("report is not Product Delivery Form ")
+                            if item.__contains__("ID No:") or item.__contains__("id no:") or item.__contains__(
+                                    "ID No.") or item.__contains__("id no.") or item.__contains__(
+                                    "ID No.") or item.__contains__("ID NO") or item.__contains__(
+                                    "ID NO.") or item.__contains__("Part ID") or item.__contains__(
+                                    "Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__(
+                                    "Sample ID") or item.__contains__("Identity No") or item.__contains__(
+                                    "Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__(
+                                    "Module Name & ID No"):
                                 print(item)
-                                id_number = item.split(":")[item.split(":").__len__()-1]
-                            if item.__contains__("Test Report No:") or item.__contains__("test report no.") or item.__contains__("Test Report No:") or item.__contains__("test report no:") or item.__contains__("Test Report No.") or item.__contains__("Test Report No") or item.__contains__("Report Number") or item.__contains__("Report #") or item.__contains__("Report ID") or item.__contains__("Report ID.") or item.__contains__("Report Id") or item.__contains__("Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
+                                id_number = item.split(":")[item.split(":").__len__() - 1]
+                            if item.__contains__("Test Report No:") or item.__contains__(
+                                    "test report no.") or item.__contains__("Test Report No:") or item.__contains__(
+                                    "test report no:") or item.__contains__("Test Report No.") or item.__contains__(
+                                    "Test Report No") or item.__contains__("Report Number") or item.__contains__(
+                                    "Report #") or item.__contains__("Report ID") or item.__contains__(
+                                    "Report ID.") or item.__contains__("Report Id") or item.__contains__(
+                                    "Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
                                 print(item)
-                                report_number = item.split(":")[item.split(":").__len__()-1]
+                                report_number = item.split(":")[item.split(":").__len__() - 1]
                             # if item.__contains__("Status:") or item.__contains__("test report no."):
                             #     print(item)
                             #     id_number = item.split("Test Report No:")[1]
                             if item.__contains__("Status") or item.__contains__("status"):
                                 print(item)
-                                status = item.split(":")[item.split(":").__len__()-1]
+                                status = item.split(":")[item.split(":").__len__() - 1]
 
-                            if item.__contains__("Qualification Criteria") or item.__contains__("Compliance Statement") or item.__contains__("Qualification Standard") or item.__contains__("Qualification Standard | ") or item.__contains__("Qualification Procedure") or item.__contains__("Qualification/Acceptance Criteria") or item.__contains__("Qualification/Accep. Criteria") or item.__contains__("Qualification / Acceptance Criteria") or item.__contains__("Qualification / Accep. Criteria") or item.__contains__("Test Criteria/Standard") or item.__contains__("Test Criteria / Standard") or item.__contains__("Reference") or item.__contains__("Ref. Document No.") or item.__contains__("Ref Document No") or item.__contains__("Acceptance Criteria No./Dwg.No.") or item.__contains__("Acceptance Criteria No. / Dwg.No."):
+                            if item.__contains__("Qualification Criteria") or item.__contains__(
+                                    "Qualiﬁcation Standard") or item.__contains__(
+                                    "Compliance Statement") or item.__contains__(
+                                    "Qualification Standard") or item.__contains__(
+                                    "Qualification Standard | ") or item.__contains__(
+                                    "Qualification Procedure") or item.__contains__(
+                                    "Qualification/Acceptance Criteria") or item.__contains__(
+                                    "Qualification/Accep. Criteria") or item.__contains__(
+                                    "Qualification / Acceptance Criteria") or item.__contains__(
+                                    "Qualification / Accep. Criteria") or item.__contains__(
+                                    "Test Criteria/Standard") or item.__contains__(
+                                    "Test Criteria / Standard") or item.__contains__("Reference") or item.__contains__(
+                                    "Ref. Document No.") or item.__contains__("Ref Document No") or item.__contains__(
+                                    "Acceptance Criteria No./Dwg.No.") or item.__contains__(
+                                    "Acceptance Criteria No. / Dwg.No."):
                                 print(item)
                                 if item.__contains__("Qualification Standard | "):
                                     qaualification_criteria = item.split(" | ")[item.split(" | ").__len__() - 1]
+                                elif item.__contains__("Qualiﬁcation Standard"):
+                                    qaualification_criteria = item.split("Qualiﬁcation Standard")[
+                                        item.split("Qualiﬁcation Standard").__len__() - 1]
                                 else:
-                                    qaualification_criteria = item.split(":")[item.split(":").__len__()-1]
+                                    qaualification_criteria = item.split(":")[item.split(":").__len__() - 1]
 
-                            if item.__contains__("Results") or item.__contains__("results") or item.__contains__("Results") or item.__contains__("results") or item.__contains__("Test Results") or item.__contains__("Test Result") or item.__contains__("Expert") or item.__contains__("Review") or item.__contains__("Results") or item.__contains__("Result") or item.__contains__("Status") or item.__contains__("Measurement Status") or item.__contains__("Result(s)") or item.__contains__("Result (s)") or item.__contains__("Result(S)") or item.__contains__("Result (S)"):
+                            if item.__contains__("Results") or item.__contains__("results") or item.__contains__(
+                                    "Results") or item.__contains__("results") or item.__contains__(
+                                    "Test Results") or item.__contains__("Test Result") or item.__contains__(
+                                    "Expert") or item.__contains__("Review") or item.__contains__(
+                                    "Results") or item.__contains__("Result") or item.__contains__(
+                                    "Status") or item.__contains__("Measurement Status") or item.__contains__(
+                                    "Result(s)") or item.__contains__("Result (s)") or item.__contains__(
+                                    "Result(S)") or item.__contains__("Result (S)"):
                                 print(item)
-                                #results = item.split("Results ® ")[1]
-                                results = item.split("Results 0 ")[1]
+                                # results = item.split("Results ® ")[1]
+                                if item.split("Results 0 ").__len__() == 1:
+                                    if item.split("Results ® ").__len__()>1:
+                                        results = item.split("Results ® ")[1]
+                                else:
+                                    if item.split("Results 0 ")[1].__len__():
+                                        results = item.split("Results 0 ")[1]
 
                                 break
-
-
 
             print("report scan going to remove images")
             for i in range(len(pdf_images)):
@@ -948,15 +1007,15 @@ class ocrController:
             system_type = request.query_params['system_type']
             system_name = request.query_params['system_name']
 
-            ass_data = assemblies.objects.filter(system_type = system_type, system_name = system_name)
+            ass_data = assemblies.objects.filter(system_type=system_type, system_name=system_name)
             ass_serializer = assembliesSerializer(ass_data, many=True)
             ass_tree_data = ass_serializer.data
 
-            sa_data = sub_assemblies.objects.filter(system_type = system_type, system_name = system_name)
+            sa_data = sub_assemblies.objects.filter(system_type=system_type, system_name=system_name)
             sa_serializer = sub_assembliesSerializer(sa_data, many=True)
             sa_tree_data = sa_serializer.data
 
-            qt_data = qualification_test.objects.filter(system_type = system_type, system_name = system_name)
+            qt_data = qualification_test.objects.filter(system_type=system_type, system_name=system_name)
             qt_serializer = qual_testSerializer(qt_data, many=True)
             qt_tree_data = qt_serializer.data
             tree_data = {
@@ -970,6 +1029,7 @@ class ocrController:
         except Exception as e:
             print(e)
             return JsonResponse({'message': 'Server Error'}, status=500)
+
     @staticmethod
     def getScannedQualificationReportList(request):
         try:
@@ -979,9 +1039,10 @@ class ocrController:
             sub_assembly = request.query_params['sub_assembly']
             qualification_test = request.query_params['qualification_test']
             batch_no = request.query_params['batch_no']
-            data = qualification_ocr_report.objects.filter(system_type=system_type,system_name = system_name,
-                    assembly_name = assembly, sub_assembly_name = sub_assembly, qualification_test = qualification_test,
-                                                           batch_set_id = batch_no).first()
+            data = qualification_ocr_report.objects.filter(system_type=system_type, system_name=system_name,
+                                                           assembly_name=assembly, sub_assembly_name=sub_assembly,
+                                                           qualification_test=qualification_test,
+                                                           batch_set_id=batch_no).first()
             reference_criteria = ''
             ocr_data = ''
             if data is None:
@@ -990,7 +1051,8 @@ class ocrController:
                 ocr_data = data.ocr_report
                 reference_criteria = data.ref_criteria
             return JsonResponse(
-                {'message': 'record found', 'success': True, 'data': ocr_data,'ref_criteria':reference_criteria, 'status': 201},
+                {'message': 'record found', 'success': True, 'data': ocr_data, 'ref_criteria': reference_criteria,
+                 'status': 201},
                 status=201)
         except Exception as e:
             print(e)
@@ -1008,14 +1070,14 @@ class ocrController:
             with open(url, 'rb') as f:
                 file_data = f.read()
                 ext = os.path.splitext(selected_file)[1][1:].strip().lower()
-                new_file_name = selected_file #+ str(uuid.uuid4().hex[:8])
+                new_file_name = selected_file  # + str(uuid.uuid4().hex[:8])
 
                 response = HttpResponse(file_data, content_type='application/force-download')
                 response['Content-Disposition'] = "attachment; filename=" + selected_file
                 response['Access-Control-Expose-Headers'] = 'Content-Disposition'
                 return response
 
-            #return response
+            # return response
             # print(fileReader)
             # return JsonResponse(
             #         {'message': 'record found', 'success': True, 'data': [], 'status': 403},
@@ -1033,6 +1095,25 @@ class ocrController:
             if data is None:
                 return JsonResponse(
                     {'message': 'record found', 'success': False, 'data': [], 'status': 201},
+                    status=201)
+            else:
+                return JsonResponse(
+                    {'message': 'record found', 'success': True, 'data': [], 'status': 403},
+                    status=201)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'Server Error'}, status=500)
+
+    @staticmethod
+    def getBatchList(request):
+        try:
+
+            data = batch_bhd_activity.objects.all()
+            serializer = getSetIdsBhdActivitySerializer(data, many=True)
+
+            if data is not None:
+                return JsonResponse(
+                    {'message': 'record found', 'success': False, 'data': serializer.data, 'status': 201},
                     status=201)
             else:
                 return JsonResponse(
