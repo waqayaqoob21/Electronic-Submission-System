@@ -213,7 +213,7 @@ class checkReportAPIVIEW(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        result = ctrl_obj.reportCheck(request.data)
+        result = ctrl_obj.reportCheck_v2(request.data)
         return result
 
 

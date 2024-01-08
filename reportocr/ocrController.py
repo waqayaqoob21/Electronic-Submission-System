@@ -1002,6 +1002,195 @@ class ocrController:
             return JsonResponse({'message': 'OCr could not perform'}, status=500)
 
     @staticmethod
+    def reportCheck_v2(request):
+        try:
+            def save_file(file: InMemoryUploadedFile, full_path):
+                with open(full_path, 'wb+') as f:
+                    for chunk in file.chunks():
+                        f.write(chunk)
+
+            report_number = ''
+            id_number = ''
+            results = ''
+            status = ''
+            qaualification_criteria = ''
+            fs = FileSystemStorage()
+            if not os.path.isdir('myScannedReports'):
+                os.mkdir('myScannedReports')
+            # open file
+            #file: InMemoryUploadedFile = request['file']
+            batch_no = request['batch_no']
+            report_observation = request['report_observation']
+            report_remarks = request['report_remarks']
+            idNumber = request['id_number']
+            if idNumber == "RD-19C (a)":
+
+                # directory name 1. S1A-Prod-06 BHD
+                # scan PDF directory
+                # get all files in a directory python
+                arr = os.listdir('reports/Reports/PDF')
+                print(arr)
+                count = 0
+                for single_pdf in arr:
+                    report_number = ''
+                    results = ''
+                    status = ''
+                    count = count +1
+                    print("report scenned", count)
+                    pdf_images = convert_from_path("reports/Reports/PDF/" +single_pdf)
+                    for i in range(len(pdf_images)):
+                        # Save pages as images in the pdf
+                        pdf_images[i].save('page' + str(i) + '.jpg', 'JPEG')
+
+                    # load all images and extract text from each page
+                    mydist = {}
+                    for i in range(len(pdf_images)):
+                        if i == 0:
+                            # path_to_tesseract = "/usr/bin/tesseract"  # r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+                            path_to_tesseract = r"\usr\bin\tesseract"
+                            image_path = r"page" + str(i) + ".jpg"  # r"page0.jpg"
+                            img = Image.open(image_path)
+                            pytesseract.tesseract_cmd = path_to_tesseract
+                            text = pytesseract.image_to_string(img)
+                            data = text.split("\n")
+                            final_list = data  # [y for x in data for y in x.split(':')]
+                            print(final_list)
+
+                            for item in final_list:
+                                if item.__contains__("Product Delivery Form (PDF)") or item.__contains__(
+                                        "Product Delivery Form"):
+                                    print("")
+                                    # return JsonResponse(
+                                    #     {'message': 'Report not found', 'success': False, 'data': dict, 'status': 403},
+                                    #     status=403)
+                                else:
+                                    # print("report is not Product Delivery Form ")
+                                    if item.__contains__("ID No:") or item.__contains__("id no:") or item.__contains__(
+                                            "ID No.") or item.__contains__("id no.") or item.__contains__(
+                                        "ID No.") or item.__contains__("ID NO") or item.__contains__(
+                                        "ID NO.") or item.__contains__("Part ID") or item.__contains__(
+                                        "Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__(
+                                        "Sample ID") or item.__contains__("Identity No") or item.__contains__(
+                                        "Identity No.") or item.__contains__(
+                                        "Module Name & ID No.") or item.__contains__(
+                                        "Module Name & ID No"):
+                                        print(item)
+                                        id_number = item.split(":")[item.split(":").__len__() - 1]
+                                    if item.__contains__("Test Report No:") or item.__contains__(
+                                            "test report no.") or item.__contains__(
+                                        "Test Report No:") or item.__contains__(
+                                        "test report no:") or item.__contains__("Test Report No.") or item.__contains__(
+                                        "Test Report No") or item.__contains__("Report Number") or item.__contains__(
+                                        "Report #") or item.__contains__("Report ID") or item.__contains__(
+                                        "Report ID.") or item.__contains__("Report Id") or item.__contains__(
+                                        "Report Id.") or item.__contains__("Report No") or item.__contains__(
+                                        "Report No."):
+                                        print(item)
+                                        report_number = item.split(":")[item.split(":").__len__() - 1]
+                                    # if item.__contains__("Status:") or item.__contains__("test report no."):
+                                    #     print(item)
+                                    #     id_number = item.split("Test Report No:")[1]
+                                    if item.__contains__("Status") or item.__contains__("status"):
+                                        print(item)
+                                        status = item.split(":")[item.split(":").__len__() - 1]
+
+                                    if item.__contains__("Qualification Criteria") or item.__contains__(
+                                            "Qualiﬁcation Standard") or item.__contains__(
+                                        "Compliance Statement") or item.__contains__(
+                                        "Qualification Standard") or item.__contains__(
+                                        "Qualification Standard | ") or item.__contains__(
+                                        "Qualification Procedure") or item.__contains__(
+                                        "Qualification/Acceptance Criteria") or item.__contains__(
+                                        "Qualification/Accep. Criteria") or item.__contains__(
+                                        "Qualification / Acceptance Criteria") or item.__contains__(
+                                        "Qualification / Accep. Criteria") or item.__contains__(
+                                        "Test Criteria/Standard") or item.__contains__(
+                                        "Test Criteria / Standard") or item.__contains__(
+                                        "Reference") or item.__contains__(
+                                        "Ref. Document No.") or item.__contains__(
+                                        "Ref Document No") or item.__contains__(
+                                        "Acceptance Criteria No./Dwg.No.") or item.__contains__(
+                                        "Acceptance Criteria No. / Dwg.No."):
+                                        print(item)
+                                        if item.__contains__("Qualification Standard | "):
+                                            qaualification_criteria = item.split(" | ")[item.split(" | ").__len__() - 1]
+                                        elif item.__contains__("Qualiﬁcation Standard"):
+                                            qaualification_criteria = item.split("Qualiﬁcation Standard")[
+                                                item.split("Qualiﬁcation Standard").__len__() - 1]
+                                        else:
+                                            qaualification_criteria = item.split(":")[item.split(":").__len__() - 1]
+
+                                    if item.__contains__("Results") or item.__contains__(
+                                            "results") or item.__contains__(
+                                            "Results") or item.__contains__("results") or item.__contains__(
+                                        "Test Results") or item.__contains__("Test Result") or item.__contains__(
+                                        "Expert") or item.__contains__("Review") or item.__contains__(
+                                        "Results") or item.__contains__("Result") or item.__contains__(
+                                        "Status") or item.__contains__("Measurement Status") or item.__contains__(
+                                        "Result(s)") or item.__contains__("Result (s)") or item.__contains__(
+                                        "Result(S)") or item.__contains__("Result (S)"):
+                                        print(item)
+                                        # results = item.split("Results ® ")[1]
+                                        if item.split("Results 0 ").__len__() == 1:
+                                            if item.split("Results ® ").__len__() > 1:
+                                                results = item.split("Results ® ")[1]
+                                        else:
+                                            if item.split("Results 0 ")[1].__len__():
+                                                results = item.split("Results 0 ")[1]
+
+                                        break
+
+                    print("report scan going to remove images")
+                    for i in range(len(pdf_images)):
+                        image_path = r"page" + str(i) + ".jpg"
+                        os.remove(image_path)
+
+                    # remove pdf file
+                    #os.remove(full_path)
+                    dict = ""
+                    print("going to match id num")
+                    print("id number is ", idNumber)
+                    print("id from pdf is ", id_number)
+                    print("report name ", single_pdf)
+                    if idNumber == id_number.lstrip():
+                        dict = {
+                            'results': results,
+                            'report_number': report_number,
+                            'id_number': id_number,
+                            'report_url': '',
+                            'file_absolute_url': '',
+                            'observation': report_observation,
+                            'remarks': report_remarks,
+                            'qaualification_criteria': qaualification_criteria
+                        }
+                        return JsonResponse(
+                            {'message': 'Report found ', 'success': True, 'data': dict, 'status': 200},
+                            status=200)
+                    # else:
+                    #     return JsonResponse(
+                    #         {'message': 'Report not found ', 'success': False, 'data': [], 'status': 403},
+                    #         status=403)
+
+            # define file_save_path variable
+            # full_path = str(datetime.today()).replace('-', '').replace(' ', '') + '_' + file.name
+            #full_path = file.name
+            # #save_file(file, full_path)
+            # target_path = 'myScannedReports/'
+            # shutil.copy(full_path, target_path)
+            # prefix = ''.join(random.choice(string.ascii_letters) for i in range(10))
+            # oldFilePath = target_path + full_path
+            # newFileName = batch_no + '_' + prefix + '_' + full_path
+            # newFIlePath = target_path + newFileName
+            # os.rename(oldFilePath, newFIlePath)
+
+            return JsonResponse(
+                {'message': 'Report found ', 'success': True, 'data': {}, 'status': 200},
+                status=200)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'OCr could not perform'}, status=500)
+
+    @staticmethod
     def getTreeData(request):
         try:
             system_type = request.query_params['system_type']
