@@ -22,8 +22,7 @@ import io
 import pandas as pd
 import itertools
 import math
-from .serializers import OcrSerializer, assembliesSerializer, sub_assembliesSerializer, qual_testSerializer, \
-    getSetIdsBhdActivitySerializer, ocr_reportSerializer
+from .serializers import *
 import PyPDF2
 
 
@@ -646,17 +645,36 @@ class ocrController:
             sys_name = request.data['sys_name']
             sys_type = request.data['sys_type']
             qualification_test = request.data['Q_test']
+            acceptance_test = request.data['acceptance_test']
+            qualification_report = request.data['qualification_report']
             sub_assembly = request.data['sub_assembly_name']
             assembly = request.data['assembly_name']
             batch_no = request.data['batch_set_no']
-            scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
-                                                                          assembly_name=assembly,
-                                                                          sub_assembly_name=sub_assembly,
-                                                                          qualification_test=qualification_test,
-                                                                          batch_set_id=batch_no).first()
+            scanned_report_list = []
+            if acceptance_test != "":
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                                                                              assembly_name=assembly,
+                                                                              sub_assembly_name=sub_assembly,
+                                                                              acceptance_test=acceptance_test,
+                                                                              batch_set_id=batch_no).first()
+            elif qualification_test != "":
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                                                                              assembly_name=assembly,
+                                                                              sub_assembly_name=sub_assembly,
+                                                                              qualification_test=qualification_test,
+                                                                              batch_set_id=batch_no).first()
+            else:
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                                                                              assembly_name=assembly,
+                                                                              sub_assembly_name=sub_assembly,
+                                                                              qualification_report=qualification_report,
+                                                                              batch_set_id=batch_no).first()
+
             if scanned_report_list is None:
                 modal.ocr_report = request.data['ocr_reports']
                 modal.qualification_test = request.data['Q_test']
+                modal.acceptance_test = request.data['acceptance_test']
+                modal.qualification_report = request.data['qualification_report']
                 modal.sub_assembly_name = request.data['sub_assembly_name']
                 modal.assembly_name = request.data['assembly_name']
                 modal.system_name = request.data['sys_name']
@@ -674,6 +692,8 @@ class ocrController:
             else:
                 scanned_report_list.ocr_report = request.data['ocr_reports']
                 scanned_report_list.qualification_test = request.data['Q_test']
+                scanned_report_list.acceptance_test = request.data['acceptance_test']
+                scanned_report_list.qualification_report = request.data['qualification_report']
                 scanned_report_list.sub_assembly_name = request.data['sub_assembly_name']
                 scanned_report_list.assembly_name = request.data['assembly_name']
                 scanned_report_list.system_name = request.data['sys_name']
@@ -714,10 +734,21 @@ class ocrController:
                 df = pd.read_excel(excel_file)
                 assemblies_list = []
                 sub_assemblies_list = []
+                acceptance_test_list = []
                 qualification_test_list = []
+                qualification_reports_list = []
                 curr_assembly = ''
                 curr_sub_assembly = ''
                 temp_data_sa = ''
+                qt_list = []
+
+
+                at_superList = []
+                atList = []
+                qt_superList = []
+                qtList = []
+                curr_type = ""
+                qr_superList = []
                 for (a, b, c) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest):
                     if math.isnan(a):
                         curr_assembly = b
@@ -731,9 +762,51 @@ class ocrController:
                         if temp_data_sa not in sub_assemblies_list:
                             sub_assemblies_list.append(temp_data_sa)
                     if c != '':
-                        temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
-                        qualification_test_list.append(temp_data_qt)
-
+                        # qt_list.append(c)
+                        # temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
+                        # qualification_test_list.append(temp_data_qt)
+                        # for item in qt_list:
+                        if c == 'Acceptance Tests':
+                            curr_type = c
+                            continue
+                        elif c == 'Qualification Tests':
+                            curr_type = c
+                            continue
+                        elif c == 'Sample Qualification Reports':
+                            curr_type = c
+                            continue
+                        else:
+                            if curr_type == 'Acceptance Tests':
+                                temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
+                                acceptance_test_list.append(temp_data_qt)
+                                # at_superList.append(c)
+                            elif curr_type == 'Qualification Tests':
+                                temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
+                                qualification_test_list.append(temp_data_qt)
+                                # qt_superList.append(c)
+                            else:
+                                temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
+                                qualification_reports_list.append(temp_data_qt)
+                                # qr_superList.append(c)
+                        #     if c == 'Acceptance Tests':
+                        #         if atList:
+                        #             at_superList.append(atList)
+                        #         atList = []
+                        #         curr_type = c
+                        #     else:
+                        #         if c == 'Qualification Tests':
+                        #             if qtList:
+                        #                 qt_superList.append(qtList)
+                        #             qtList = []
+                        #             curr_type = c
+                        #         else:
+                        #             if curr_type == 'Acceptance Tests':
+                        #                 atList.append(c)
+                        #             else:
+                        #                 qtList.append(c)
+                print(acceptance_test_list)
+                print(qualification_test_list)
+                print(qualification_reports_list)
                 for item in assemblies_list:
                     # print(item)
                     if item != '':
@@ -790,6 +863,35 @@ class ocrController:
                         modal.save()
                         print("sub assembly saved")
 
+                for item in acceptance_test_list:
+                    # print(item)
+                    if item != '':
+                        print("going to add Acceptance Test")
+                        modal = acceptance_test()
+                        curr_ass = ''
+                        curr_sub_ass = ''
+                        curr_at = ''
+                        temp = ''
+                        if item.__contains__("="):
+                            # print(item)
+                            curr_ass = item.split("=")[0]
+                            temp = item.split("=")[1]
+                        if temp.__contains__(":"):
+                            curr_sub_ass = temp.split(":")[0]
+                            curr_at = temp.split(":")[1]
+                        modal.sub_assembly_name = curr_sub_ass
+                        modal.assembly_name = curr_ass
+                        modal.system_name = request.data['sys_name']
+                        modal.system_type = request.data['sys_type']
+                        modal.acceptance_test = curr_at
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Acceptance Test saved")
                 for item in qualification_test_list:
                     # print(item)
                     if item != '':
@@ -806,11 +908,11 @@ class ocrController:
                         if temp.__contains__(":"):
                             curr_sub_ass = temp.split(":")[0]
                             curr_qt = temp.split(":")[1]
-                        modal.qualification_test = curr_qt
                         modal.sub_assembly_name = curr_sub_ass
                         modal.assembly_name = curr_ass
                         modal.system_name = request.data['sys_name']
                         modal.system_type = request.data['sys_type']
+                        modal.qualification_test = curr_qt
                         modal.batch_set_id = request.data['batch_set_no']
                         modal.bhd_no = request.data['bhd_no']
                         modal.activity_type = request.data['activityType']
@@ -819,6 +921,35 @@ class ocrController:
                         modal.ref_criteria = request.data['reference_criteria']
                         modal.save()
                         print("Qualification Test saved")
+                for item in qualification_reports_list:
+                    # print(item)
+                    if item != '':
+                        print("going to add Qualification Reports")
+                        modal = sample_qualification_reports()
+                        curr_ass = ''
+                        curr_sub_ass = ''
+                        curr_qr = ''
+                        temp = ''
+                        if item.__contains__("="):
+                            # print(item)
+                            curr_ass = item.split("=")[0]
+                            temp = item.split("=")[1]
+                        if temp.__contains__(":"):
+                            curr_sub_ass = temp.split(":")[0]
+                            curr_qr = temp.split(":")[1]
+                        modal.sub_assembly_name = curr_sub_ass
+                        modal.assembly_name = curr_ass
+                        modal.system_name = request.data['sys_name']
+                        modal.system_type = request.data['sys_type']
+                        modal.sample_qualification_reports = curr_qr
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Qualification Reports saved")
             else:
                 check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
                                                                  batch_set_id=request.data['batch_set_no']).first()
@@ -1204,13 +1335,23 @@ class ocrController:
             sa_serializer = sub_assembliesSerializer(sa_data, many=True)
             sa_tree_data = sa_serializer.data
 
+            at_data = acceptance_test.objects.filter(system_type=system_type, system_name=system_name)
+            at_serializer = acceptance_testSerializer(at_data, many=True)
+            at_tree_data = at_serializer.data
+
             qt_data = qualification_test.objects.filter(system_type=system_type, system_name=system_name)
             qt_serializer = qual_testSerializer(qt_data, many=True)
             qt_tree_data = qt_serializer.data
+
+            qr_data = sample_qualification_reports.objects.filter(system_type=system_type, system_name=system_name)
+            qr_serializer = sample_qualification_reportSerializer(qr_data, many=True)
+            qr_tree_data = qr_serializer.data
             tree_data = {
                 'assemblies': ass_tree_data,
                 'sub_assemblies': sa_tree_data,
-                'qualification_test': qt_tree_data
+                'acceptance_tests': at_tree_data,
+                'qualification_test': qt_tree_data,
+                'qualification_reports': qr_tree_data
             }
             return JsonResponse(
                 {'message': 'record found', 'success': True, 'data': tree_data, 'status': 201},
@@ -1227,11 +1368,25 @@ class ocrController:
             assembly = request.query_params['assembly']
             sub_assembly = request.query_params['sub_assembly']
             qualification_test = request.query_params['qualification_test']
+            acceptance_test = request.query_params['acceptance_test']
+            qualification_report = request.query_params['qualification_report']
             batch_no = request.query_params['batch_no']
-            data = qualification_ocr_report.objects.filter(system_type=system_type, system_name=system_name,
-                                                           assembly_name=assembly, sub_assembly_name=sub_assembly,
-                                                           qualification_test=qualification_test,
-                                                           batch_set_id=batch_no).first()
+            data = ""
+            if acceptance_test != "":
+                data = qualification_ocr_report.objects.filter(system_type=system_type, system_name=system_name,
+                                                               assembly_name=assembly, sub_assembly_name=sub_assembly,
+                                                               acceptance_test=acceptance_test,
+                                                               batch_set_id=batch_no).first()
+            elif qualification_test != "":
+                data = qualification_ocr_report.objects.filter(system_type=system_type, system_name=system_name,
+                                                               assembly_name=assembly, sub_assembly_name=sub_assembly,
+                                                               qualification_test=qualification_test,
+                                                               batch_set_id=batch_no).first()
+            else:
+                data = qualification_ocr_report.objects.filter(system_type=system_type, system_name=system_name,
+                                                               assembly_name=assembly, sub_assembly_name=sub_assembly,
+                                                               qualification_report=qualification_report,
+                                                               batch_set_id=batch_no).first()
             reference_criteria = ''
             ocr_data = ''
             if data is None:
