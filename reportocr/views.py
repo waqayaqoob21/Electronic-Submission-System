@@ -246,3 +246,9 @@ class getBatchListListAPIView(APIView):
     def get(self, request):
         result = ctrl_obj.getBatchList(request)
         return result
+class getDataForExcelViewAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        result = ctrl_obj.getDataForExcelView(request)
+        return result

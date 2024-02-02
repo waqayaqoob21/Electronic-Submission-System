@@ -742,6 +742,9 @@ class ocrController:
                 temp_data_sa = ''
                 qt_list = []
 
+                previous_assembly = ""
+                previous_sub_assembly = ""
+                previous_type = ""
 
                 at_superList = []
                 atList = []
@@ -749,6 +752,7 @@ class ocrController:
                 qtList = []
                 curr_type = ""
                 qr_superList = []
+                temp_previous_sub_assembly = ""
                 for (a, b, c) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest):
                     if math.isnan(a):
                         curr_assembly = b
@@ -762,10 +766,6 @@ class ocrController:
                         if temp_data_sa not in sub_assemblies_list:
                             sub_assemblies_list.append(temp_data_sa)
                     if c != '':
-                        # qt_list.append(c)
-                        # temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
-                        # qualification_test_list.append(temp_data_qt)
-                        # for item in qt_list:
                         if c == 'Acceptance Tests':
                             curr_type = c
                             continue
@@ -787,23 +787,12 @@ class ocrController:
                             else:
                                 temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
                                 qualification_reports_list.append(temp_data_qt)
-                                # qr_superList.append(c)
-                        #     if c == 'Acceptance Tests':
-                        #         if atList:
-                        #             at_superList.append(atList)
-                        #         atList = []
-                        #         curr_type = c
-                        #     else:
-                        #         if c == 'Qualification Tests':
-                        #             if qtList:
-                        #                 qt_superList.append(qtList)
-                        #             qtList = []
-                        #             curr_type = c
-                        #         else:
-                        #             if curr_type == 'Acceptance Tests':
-                        #                 atList.append(c)
-                        #             else:
-                        #                 qtList.append(c)
+                    if previous_assembly != '' and previous_assembly != curr_assembly:
+                        if previous_sub_assembly != curr_sub_assembly:
+                            curr_type = "Qualification Tests"
+                            previous_type = curr_type
+                    previous_assembly = curr_assembly
+                    previous_sub_assembly = curr_sub_assembly
                 print(acceptance_test_list)
                 print(qualification_test_list)
                 print(qualification_reports_list)
@@ -1137,24 +1126,26 @@ class ocrController:
         try:
             system_type = request.query_params['system_type']
             system_name = request.query_params['system_name']
+            batch_no = request.query_params['batch_no']
 
-            ass_data = assemblies.objects.filter(system_type=system_type, system_name=system_name)
+            ass_data = assemblies.objects.filter(system_type=system_type, system_name=system_name,
+                                                batch_set_id = batch_no)
             ass_serializer = assembliesSerializer(ass_data, many=True)
             ass_tree_data = ass_serializer.data
 
-            sa_data = sub_assemblies.objects.filter(system_type=system_type, system_name=system_name)
+            sa_data = sub_assemblies.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
             sa_serializer = sub_assembliesSerializer(sa_data, many=True)
             sa_tree_data = sa_serializer.data
 
-            at_data = acceptance_test.objects.filter(system_type=system_type, system_name=system_name)
+            at_data = acceptance_test.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
             at_serializer = acceptance_testSerializer(at_data, many=True)
             at_tree_data = at_serializer.data
 
-            qt_data = qualification_test.objects.filter(system_type=system_type, system_name=system_name)
+            qt_data = qualification_test.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
             qt_serializer = qual_testSerializer(qt_data, many=True)
             qt_tree_data = qt_serializer.data
 
-            qr_data = sample_qualification_reports.objects.filter(system_type=system_type, system_name=system_name)
+            qr_data = sample_qualification_reports.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
             qr_serializer = sample_qualification_reportSerializer(qr_data, many=True)
             qr_tree_data = qr_serializer.data
             tree_data = {
@@ -1274,6 +1265,20 @@ class ocrController:
                 return JsonResponse(
                     {'message': 'record found', 'success': True, 'data': [], 'status': 403},
                     status=201)
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'Server Error'}, status=500)
+
+
+    @staticmethod
+    def getDataForExcelView(request):
+        try:
+
+            ocr_data = qualification_ocr_report.objects.all()
+            serializer = ocr_reportSerializer(ocr_data,many=True)
+            return JsonResponse({'message': 'record found', 'success': True, 'data': serializer.data, 'status': 201},
+                    status=201)
+
         except Exception as e:
             print(e)
             return JsonResponse({'message': 'Server Error'}, status=500)

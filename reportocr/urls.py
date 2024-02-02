@@ -42,4 +42,6 @@ urlpatterns = [
     path('downloadFile', DownloadFileAPIView.as_view(), name='downloadFile'),
     path('getBatchList/', getBatchListListAPIView.as_view(), name='getBatchList'),
 
+    path('getDataForExcelView/', getDataForExcelViewAPIView.as_view(), name='getDataForExcelView'),
+
 ]
