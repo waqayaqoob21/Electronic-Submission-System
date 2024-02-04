@@ -34,6 +34,10 @@ class sample_qualification_reportSerializer(serializers.ModelSerializer):
     class Meta:
         model = sample_qualification_reports
         fields = '__all__'
+class material_silicon_phenolicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = material_silicon_phenolic
+        fields = '__all__'
 class ocr_reportSerializer(serializers.ModelSerializer):
     class Meta:
         model = qualification_ocr_report

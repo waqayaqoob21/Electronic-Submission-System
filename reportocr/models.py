@@ -91,6 +91,22 @@ class sample_qualification_reports(models.Model):
     date = models.DateTimeField(auto_now_add=False, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now_add=False, null=True)
+
+class material_silicon_phenolic(models.Model):
+    id = models.AutoField(primary_key=True)
+    system_type = models.CharField(max_length=300)
+    system_name = models.CharField(max_length=300)
+    assembly_name = models.CharField(max_length=300)
+    sub_assembly_name = models.CharField(max_length=300)
+    material_silicon_phenolic = models.CharField(max_length=300)
+    batch_set_id = models.CharField(max_length=300, null=True)
+    bhd_no = models.CharField(max_length=300, null=True)
+    activity_type = models.CharField(max_length=300, null=True)
+    title = models.CharField(max_length=300, null=True)
+    ref_criteria = models.CharField(max_length=300, null=True)
+    date = models.DateTimeField(auto_now_add=False, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now_add=False, null=True)
 class batch_bhd_activity(models.Model):
     id = models.AutoField(primary_key=True)
     system_name = models.CharField(max_length=300)
@@ -113,6 +129,7 @@ class qualification_ocr_report(models.Model):
     qualification_test = models.CharField(max_length=300)
     acceptance_test = models.CharField(max_length=300, null=True)
     qualification_report = models.CharField(max_length=300, null=True)
+    material_silicon_phenolic = models.CharField(max_length=300, null=True)
     batch_set_id = models.CharField(max_length=300, null=True)
     bhd_no = models.CharField(max_length=300, null=True)
     activity_type = models.CharField(max_length=300, null=True)
@@ -122,3 +139,5 @@ class qualification_ocr_report(models.Model):
     ocr_report = models.TextField(null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now_add=False, null=True)
+
+

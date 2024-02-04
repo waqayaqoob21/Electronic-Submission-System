@@ -647,6 +647,7 @@ class ocrController:
             qualification_test = request.data['Q_test']
             acceptance_test = request.data['acceptance_test']
             qualification_report = request.data['qualification_report']
+            material_silicon_phenolic = request.data['silicon_phenolic']
             sub_assembly = request.data['sub_assembly_name']
             assembly = request.data['assembly_name']
             batch_no = request.data['batch_set_no']
@@ -663,11 +664,17 @@ class ocrController:
                                                                               sub_assembly_name=sub_assembly,
                                                                               qualification_test=qualification_test,
                                                                               batch_set_id=batch_no).first()
-            else:
+            elif qualification_report != '':
                 scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
                                                                               assembly_name=assembly,
                                                                               sub_assembly_name=sub_assembly,
                                                                               qualification_report=qualification_report,
+                                                                              batch_set_id=batch_no).first()
+            else:
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                                                                              assembly_name=assembly,
+                                                                              sub_assembly_name=sub_assembly,
+                                                                              material_silicon_phenolic=material_silicon_phenolic,
                                                                               batch_set_id=batch_no).first()
 
             if scanned_report_list is None:
@@ -675,6 +682,7 @@ class ocrController:
                 modal.qualification_test = request.data['Q_test']
                 modal.acceptance_test = request.data['acceptance_test']
                 modal.qualification_report = request.data['qualification_report']
+                modal.material_silicon_phenolic = request.data['silicon_phenolic']
                 modal.sub_assembly_name = request.data['sub_assembly_name']
                 modal.assembly_name = request.data['assembly_name']
                 modal.system_name = request.data['sys_name']
@@ -694,6 +702,7 @@ class ocrController:
                 scanned_report_list.qualification_test = request.data['Q_test']
                 scanned_report_list.acceptance_test = request.data['acceptance_test']
                 scanned_report_list.qualification_report = request.data['qualification_report']
+                scanned_report_list.material_silicon_phenolic = request.data['silicon_phenolic']
                 scanned_report_list.sub_assembly_name = request.data['sub_assembly_name']
                 scanned_report_list.assembly_name = request.data['assembly_name']
                 scanned_report_list.system_name = request.data['sys_name']
@@ -737,6 +746,7 @@ class ocrController:
                 acceptance_test_list = []
                 qualification_test_list = []
                 qualification_reports_list = []
+                material_silicon_phenolic_list = []
                 curr_assembly = ''
                 curr_sub_assembly = ''
                 temp_data_sa = ''
@@ -753,16 +763,23 @@ class ocrController:
                 curr_type = ""
                 qr_superList = []
                 temp_previous_sub_assembly = ""
-                for (a, b, c) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest):
-                    if math.isnan(a):
+                for (a, b, c,d) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest, df.Status):
+                    b = str(b)
+                    c = str(c)
+                    d = str(d)
+                    if b != '' and c == 'nan' and d == 'nan':
                         curr_assembly = b
                         assemblies_list.append(b)
                     if b not in sub_assemblies_list:
                         curr_sub_assembly = b
-                        if math.isnan(a) and math.isnan(c):
+                        if math.isnan(a) and c != 'nan':
+                            continue
+                        if b == 'nan' and c != 'nan':
+                            curr_sub_assembly = previous_sub_assembly
                             continue
                         else:
-                            temp_data_sa = curr_assembly + '=' + b
+                            if curr_assembly != b:
+                                temp_data_sa = curr_assembly + '=' + b
                         if temp_data_sa not in sub_assemblies_list:
                             sub_assemblies_list.append(temp_data_sa)
                     if c != '':
@@ -775,18 +792,28 @@ class ocrController:
                         elif c == 'Sample Qualification Reports':
                             curr_type = c
                             continue
+                        elif c == 'Material (Si-Phenolic)':
+                            curr_type = c
+                            continue
                         else:
                             if curr_type == 'Acceptance Tests':
                                 temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
-                                acceptance_test_list.append(temp_data_qt)
+                                if temp_data_qt not in acceptance_test_list:
+                                    acceptance_test_list.append(temp_data_qt)
                                 # at_superList.append(c)
                             elif curr_type == 'Qualification Tests':
                                 temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
-                                qualification_test_list.append(temp_data_qt)
+                                if temp_data_qt not in qualification_test_list:
+                                    qualification_test_list.append(temp_data_qt)
                                 # qt_superList.append(c)
+                            elif curr_type == 'Sample Qualification Reports':
+                                temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
+                                if temp_data_qt not in qualification_reports_list:
+                                    qualification_reports_list.append(temp_data_qt)
                             else:
                                 temp_data_qt = curr_assembly + '=' + curr_sub_assembly + ':' + str(c)
-                                qualification_reports_list.append(temp_data_qt)
+                                if temp_data_qt not in material_silicon_phenolic_list:
+                                    material_silicon_phenolic_list.append(temp_data_qt)
                     if previous_assembly != '' and previous_assembly != curr_assembly:
                         if previous_sub_assembly != curr_sub_assembly:
                             curr_type = "Qualification Tests"
@@ -939,6 +966,36 @@ class ocrController:
                         modal.ref_criteria = request.data['reference_criteria']
                         modal.save()
                         print("Qualification Reports saved")
+
+                for item in material_silicon_phenolic_list:
+                    # print(item)
+                    if item != '':
+                        print("going to add Material Silicon Phenolic")
+                        modal = material_silicon_phenolic()
+                        curr_ass = ''
+                        curr_sub_ass = ''
+                        curr_sp = ''
+                        temp = ''
+                        if item.__contains__("="):
+                            # print(item)
+                            curr_ass = item.split("=")[0]
+                            temp = item.split("=")[1]
+                        if temp.__contains__(":"):
+                            curr_sub_ass = temp.split(":")[0]
+                            curr_sp = temp.split(":")[1]
+                        modal.sub_assembly_name = curr_sub_ass
+                        modal.assembly_name = curr_ass
+                        modal.system_name = request.data['sys_name']
+                        modal.system_type = request.data['sys_type']
+                        modal.material_silicon_phenolic = curr_sp
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Material Silicon Phenolic saved")
             else:
                 check_record = batch_bhd_activity.objects.filter(system_name=request.data['sys_name'],
                                                                  batch_set_id=request.data['batch_set_no']).first()
@@ -1110,6 +1167,7 @@ class ocrController:
                     'remarks': report_remarks,
                     'qaualification_criteria': qaualification_criteria
                 }
+                print(dict)
                 return JsonResponse(
                     {'message': 'Report found ', 'success': True, 'data': dict, 'status': 200},
                     status=200)
@@ -1283,6 +1341,7 @@ class ocrController:
                             'remarks': report_remarks,
                             'qaualification_criteria': qaualification_criteria
                         }
+                        print(dict)
                         return JsonResponse(
                             {'message': 'Report found ', 'success': True, 'data': dict, 'status': 200},
                             status=200)
@@ -1337,12 +1396,17 @@ class ocrController:
             qr_data = sample_qualification_reports.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
             qr_serializer = sample_qualification_reportSerializer(qr_data, many=True)
             qr_tree_data = qr_serializer.data
+
+            sp_data = material_silicon_phenolic.objects.filter(~Q(material_silicon_phenolic = 'nan'),system_type=system_type, system_name=system_name,batch_set_id = batch_no)
+            sp_serializer = material_silicon_phenolicSerializer(sp_data, many=True)
+            sp_tree_data = sp_serializer.data
             tree_data = {
                 'assemblies': ass_tree_data,
                 'sub_assemblies': sa_tree_data,
                 'acceptance_tests': at_tree_data,
                 'qualification_test': qt_tree_data,
-                'qualification_reports': qr_tree_data
+                'qualification_reports': qr_tree_data,
+                'silicon_phenolic': sp_tree_data
             }
             return JsonResponse(
                 {'message': 'record found', 'success': True, 'data': tree_data, 'status': 201},
@@ -1361,6 +1425,7 @@ class ocrController:
             qualification_test = request.query_params['qualification_test']
             acceptance_test = request.query_params['acceptance_test']
             qualification_report = request.query_params['qualification_report']
+            silicon_phenolic = request.query_params['silicon_phenolic']
             batch_no = request.query_params['batch_no']
             data = ""
             if acceptance_test != "":
@@ -1373,10 +1438,15 @@ class ocrController:
                                                                assembly_name=assembly, sub_assembly_name=sub_assembly,
                                                                qualification_test=qualification_test,
                                                                batch_set_id=batch_no).first()
-            else:
+            elif qualification_report != "":
                 data = qualification_ocr_report.objects.filter(system_type=system_type, system_name=system_name,
                                                                assembly_name=assembly, sub_assembly_name=sub_assembly,
                                                                qualification_report=qualification_report,
+                                                               batch_set_id=batch_no).first()
+            else:
+                data = qualification_ocr_report.objects.filter(system_type=system_type, system_name=system_name,
+                                                               assembly_name=assembly, sub_assembly_name=sub_assembly,
+                                                               material_silicon_phenolic=silicon_phenolic,
                                                                batch_set_id=batch_no).first()
             reference_criteria = ''
             ocr_data = ''
