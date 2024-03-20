@@ -240,15 +240,34 @@ class DownloadFileAPIView(APIView):
         result = ctrl_obj.downloadFile(request)
         return result
 
+
 class getBatchListListAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
         result = ctrl_obj.getBatchList(request)
         return result
+
+
 class getDataForExcelViewAPIView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
         result = ctrl_obj.getDataForExcelView(request)
+        return result
+
+
+class RenameReportsAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        result = ctrl_obj.RenameReports(request)
+        return result
+
+
+class ScanAllReportsAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        result = ctrl_obj.ScanAllReports(request)
         return result

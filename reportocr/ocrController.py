@@ -1,4 +1,6 @@
 import json
+import re
+import time
 
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -23,7 +25,6 @@ import pandas as pd
 import itertools
 import math
 from .serializers import *
-import PyPDF2
 
 
 class ocrController:
@@ -525,28 +526,28 @@ class ocrController:
 
                         if item.__contains__("Test Report No:") or item.__contains__(
                                 "test report no:") or item.__contains__("Test Report No.") or item.__contains__(
-                                "Test Report No") or item.__contains__("Report Number") or item.__contains__(
-                                "Report #") or item.__contains__("Report ID") or item.__contains__(
-                                "Report ID.") or item.__contains__("Report Id") or item.__contains__(
-                                "Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
+                            "Test Report No") or item.__contains__("Report Number") or item.__contains__(
+                            "Report #") or item.__contains__("Report ID") or item.__contains__(
+                            "Report ID.") or item.__contains__("Report Id") or item.__contains__(
+                            "Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
                             print(item)
                             report_number = item.split(":")[1]
                         if item.__contains__("ID No.") or item.__contains__("id no.") or item.__contains__(
                                 "ID No.") or item.__contains__("ID NO") or item.__contains__(
-                                "ID NO.") or item.__contains__("Part ID") or item.__contains__(
-                                "Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__(
-                                "Sample ID") or item.__contains__("Identity No") or item.__contains__(
-                                "Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__(
-                                "Module Name & ID No"):
+                            "ID NO.") or item.__contains__("Part ID") or item.__contains__(
+                            "Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__(
+                            "Sample ID") or item.__contains__("Identity No") or item.__contains__(
+                            "Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__(
+                            "Module Name & ID No"):
                             print(item)
                             id_number = item.split("ID No.:")[1]
                         if item.__contains__("Results") or item.__contains__("results") or item.__contains__(
                                 "Test Results") or item.__contains__("Test Result") or item.__contains__(
-                                "Expert") or item.__contains__("Review") or item.__contains__(
-                                "Results") or item.__contains__("Result") or item.__contains__(
-                                "Status") or item.__contains__("Measurement Status") or item.__contains__(
-                                "Result(s)") or item.__contains__("Result (s)") or item.__contains__(
-                                "Result(S)") or item.__contains__("Result (S)"):
+                            "Expert") or item.__contains__("Review") or item.__contains__(
+                            "Results") or item.__contains__("Result") or item.__contains__(
+                            "Status") or item.__contains__("Measurement Status") or item.__contains__(
+                            "Result(s)") or item.__contains__("Result (s)") or item.__contains__(
+                            "Result(S)") or item.__contains__("Result (S)"):
                             print(item)
                             result_status = item.split("Results:")[1]
 
@@ -653,25 +654,29 @@ class ocrController:
             batch_no = request.data['batch_set_no']
             scanned_report_list = []
             if acceptance_test != "":
-                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                              system_name=sys_name,
                                                                               assembly_name=assembly,
                                                                               sub_assembly_name=sub_assembly,
                                                                               acceptance_test=acceptance_test,
                                                                               batch_set_id=batch_no).first()
             elif qualification_test != "":
-                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                              system_name=sys_name,
                                                                               assembly_name=assembly,
                                                                               sub_assembly_name=sub_assembly,
                                                                               qualification_test=qualification_test,
                                                                               batch_set_id=batch_no).first()
             elif qualification_report != '':
-                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                              system_name=sys_name,
                                                                               assembly_name=assembly,
                                                                               sub_assembly_name=sub_assembly,
                                                                               qualification_report=qualification_report,
                                                                               batch_set_id=batch_no).first()
             else:
-                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type, system_name=sys_name,
+                scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                              system_name=sys_name,
                                                                               assembly_name=assembly,
                                                                               sub_assembly_name=sub_assembly,
                                                                               material_silicon_phenolic=material_silicon_phenolic,
@@ -763,7 +768,7 @@ class ocrController:
                 curr_type = ""
                 qr_superList = []
                 temp_previous_sub_assembly = ""
-                for (a, b, c,d) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest, df.Status):
+                for (a, b, c, d) in zip(df.SrNo, df.Assembly_SubAssembly, df.QualificationTest, df.Status):
                     b = str(b)
                     c = str(c)
                     d = str(d)
@@ -1079,21 +1084,21 @@ class ocrController:
                             # print("report is not Product Delivery Form ")
                             if item.__contains__("ID No:") or item.__contains__("id no:") or item.__contains__(
                                     "ID No.") or item.__contains__("id no.") or item.__contains__(
-                                    "ID No.") or item.__contains__("ID NO") or item.__contains__(
-                                    "ID NO.") or item.__contains__("Part ID") or item.__contains__(
-                                    "Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__(
-                                    "Sample ID") or item.__contains__("Identity No") or item.__contains__(
-                                    "Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__(
-                                    "Module Name & ID No"):
+                                "ID No.") or item.__contains__("ID NO") or item.__contains__(
+                                "ID NO.") or item.__contains__("Part ID") or item.__contains__(
+                                "Cable Analyzer ID") or item.__contains__("ID#") or item.__contains__(
+                                "Sample ID") or item.__contains__("Identity No") or item.__contains__(
+                                "Identity No.") or item.__contains__("Module Name & ID No.") or item.__contains__(
+                                "Module Name & ID No"):
                                 print(item)
                                 id_number = item.split(":")[item.split(":").__len__() - 1]
                             if item.__contains__("Test Report No:") or item.__contains__(
                                     "test report no.") or item.__contains__("Test Report No:") or item.__contains__(
-                                    "test report no:") or item.__contains__("Test Report No.") or item.__contains__(
-                                    "Test Report No") or item.__contains__("Report Number") or item.__contains__(
-                                    "Report #") or item.__contains__("Report ID") or item.__contains__(
-                                    "Report ID.") or item.__contains__("Report Id") or item.__contains__(
-                                    "Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
+                                "test report no:") or item.__contains__("Test Report No.") or item.__contains__(
+                                "Test Report No") or item.__contains__("Report Number") or item.__contains__(
+                                "Report #") or item.__contains__("Report ID") or item.__contains__(
+                                "Report ID.") or item.__contains__("Report Id") or item.__contains__(
+                                "Report Id.") or item.__contains__("Report No") or item.__contains__("Report No."):
                                 print(item)
                                 report_number = item.split(":")[item.split(":").__len__() - 1]
                             # if item.__contains__("Status:") or item.__contains__("test report no."):
@@ -1105,19 +1110,19 @@ class ocrController:
 
                             if item.__contains__("Qualification Criteria") or item.__contains__(
                                     "Qualiﬁcation Standard") or item.__contains__(
-                                    "Compliance Statement") or item.__contains__(
-                                    "Qualification Standard") or item.__contains__(
-                                    "Qualification Standard | ") or item.__contains__(
-                                    "Qualification Procedure") or item.__contains__(
-                                    "Qualification/Acceptance Criteria") or item.__contains__(
-                                    "Qualification/Accep. Criteria") or item.__contains__(
-                                    "Qualification / Acceptance Criteria") or item.__contains__(
-                                    "Qualification / Accep. Criteria") or item.__contains__(
-                                    "Test Criteria/Standard") or item.__contains__(
-                                    "Test Criteria / Standard") or item.__contains__("Reference") or item.__contains__(
-                                    "Ref. Document No.") or item.__contains__("Ref Document No") or item.__contains__(
-                                    "Acceptance Criteria No./Dwg.No.") or item.__contains__(
-                                    "Acceptance Criteria No. / Dwg.No."):
+                                "Compliance Statement") or item.__contains__(
+                                "Qualification Standard") or item.__contains__(
+                                "Qualification Standard | ") or item.__contains__(
+                                "Qualification Procedure") or item.__contains__(
+                                "Qualification/Acceptance Criteria") or item.__contains__(
+                                "Qualification/Accep. Criteria") or item.__contains__(
+                                "Qualification / Acceptance Criteria") or item.__contains__(
+                                "Qualification / Accep. Criteria") or item.__contains__(
+                                "Test Criteria/Standard") or item.__contains__(
+                                "Test Criteria / Standard") or item.__contains__("Reference") or item.__contains__(
+                                "Ref. Document No.") or item.__contains__("Ref Document No") or item.__contains__(
+                                "Acceptance Criteria No./Dwg.No.") or item.__contains__(
+                                "Acceptance Criteria No. / Dwg.No."):
                                 print(item)
                                 if item.__contains__("Qualification Standard | "):
                                     qaualification_criteria = item.split(" | ")[item.split(" | ").__len__() - 1]
@@ -1129,16 +1134,16 @@ class ocrController:
 
                             if item.__contains__("Results") or item.__contains__("results") or item.__contains__(
                                     "Results") or item.__contains__("results") or item.__contains__(
-                                    "Test Results") or item.__contains__("Test Result") or item.__contains__(
-                                    "Expert") or item.__contains__("Review") or item.__contains__(
-                                    "Results") or item.__contains__("Result") or item.__contains__(
-                                    "Status") or item.__contains__("Measurement Status") or item.__contains__(
-                                    "Result(s)") or item.__contains__("Result (s)") or item.__contains__(
-                                    "Result(S)") or item.__contains__("Result (S)"):
+                                "Test Results") or item.__contains__("Test Result") or item.__contains__(
+                                "Expert") or item.__contains__("Review") or item.__contains__(
+                                "Results") or item.__contains__("Result") or item.__contains__(
+                                "Status") or item.__contains__("Measurement Status") or item.__contains__(
+                                "Result(s)") or item.__contains__("Result (s)") or item.__contains__(
+                                "Result(S)") or item.__contains__("Result (S)"):
                                 print(item)
                                 # results = item.split("Results ® ")[1]
                                 if item.split("Results 0 ").__len__() == 1:
-                                    if item.split("Results ® ").__len__()>1:
+                                    if item.split("Results ® ").__len__() > 1:
                                         results = item.split("Results ® ")[1]
                                 else:
                                     if item.split("Results 0 ")[1].__len__():
@@ -1196,7 +1201,7 @@ class ocrController:
             if not os.path.isdir('myScannedReports'):
                 os.mkdir('myScannedReports')
             # open file
-            #file: InMemoryUploadedFile = request['file']
+            # file: InMemoryUploadedFile = request['file']
             batch_no = request['batch_no']
             report_observation = request['report_observation']
             report_remarks = request['report_remarks']
@@ -1213,9 +1218,9 @@ class ocrController:
                     report_number = ''
                     results = ''
                     status = ''
-                    count = count +1
+                    count = count + 1
                     print("report scenned", count)
-                    pdf_images = convert_from_path("reports/Reports/PDF/" +single_pdf)
+                    pdf_images = convert_from_path("reports/Reports/PDF/" + single_pdf)
                     for i in range(len(pdf_images)):
                         # Save pages as images in the pdf
                         pdf_images[i].save('page' + str(i) + '.jpg', 'JPEG')
@@ -1300,7 +1305,7 @@ class ocrController:
 
                                     if item.__contains__("Results") or item.__contains__(
                                             "results") or item.__contains__(
-                                            "Results") or item.__contains__("results") or item.__contains__(
+                                        "Results") or item.__contains__("results") or item.__contains__(
                                         "Test Results") or item.__contains__("Test Result") or item.__contains__(
                                         "Expert") or item.__contains__("Review") or item.__contains__(
                                         "Results") or item.__contains__("Result") or item.__contains__(
@@ -1324,7 +1329,7 @@ class ocrController:
                         os.remove(image_path)
 
                     # remove pdf file
-                    #os.remove(full_path)
+                    # os.remove(full_path)
                     dict = ""
                     print("going to match id num")
                     print("id number is ", idNumber)
@@ -1352,7 +1357,7 @@ class ocrController:
 
             # define file_save_path variable
             # full_path = str(datetime.today()).replace('-', '').replace(' ', '') + '_' + file.name
-            #full_path = file.name
+            # full_path = file.name
             # #save_file(file, full_path)
             # target_path = 'myScannedReports/'
             # shutil.copy(full_path, target_path)
@@ -1377,27 +1382,33 @@ class ocrController:
             batch_no = request.query_params['batch_no']
 
             ass_data = assemblies.objects.filter(system_type=system_type, system_name=system_name,
-                                                batch_set_id = batch_no)
+                                                 batch_set_id=batch_no)
             ass_serializer = assembliesSerializer(ass_data, many=True)
             ass_tree_data = ass_serializer.data
 
-            sa_data = sub_assemblies.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
+            sa_data = sub_assemblies.objects.filter(system_type=system_type, system_name=system_name,
+                                                    batch_set_id=batch_no)
             sa_serializer = sub_assembliesSerializer(sa_data, many=True)
             sa_tree_data = sa_serializer.data
 
-            at_data = acceptance_test.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
+            at_data = acceptance_test.objects.filter(system_type=system_type, system_name=system_name,
+                                                     batch_set_id=batch_no)
             at_serializer = acceptance_testSerializer(at_data, many=True)
             at_tree_data = at_serializer.data
 
-            qt_data = qualification_test.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
+            qt_data = qualification_test.objects.filter(system_type=system_type, system_name=system_name,
+                                                        batch_set_id=batch_no)
             qt_serializer = qual_testSerializer(qt_data, many=True)
             qt_tree_data = qt_serializer.data
 
-            qr_data = sample_qualification_reports.objects.filter(system_type=system_type, system_name=system_name,batch_set_id = batch_no)
+            qr_data = sample_qualification_reports.objects.filter(system_type=system_type, system_name=system_name,
+                                                                  batch_set_id=batch_no)
             qr_serializer = sample_qualification_reportSerializer(qr_data, many=True)
             qr_tree_data = qr_serializer.data
 
-            sp_data = material_silicon_phenolic.objects.filter(~Q(material_silicon_phenolic = 'nan'),system_type=system_type, system_name=system_name,batch_set_id = batch_no)
+            sp_data = material_silicon_phenolic.objects.filter(~Q(material_silicon_phenolic='nan'),
+                                                               system_type=system_type, system_name=system_name,
+                                                               batch_set_id=batch_no)
             sp_serializer = material_silicon_phenolicSerializer(sp_data, many=True)
             sp_tree_data = sp_serializer.data
             tree_data = {
@@ -1528,15 +1539,1035 @@ class ocrController:
             print(e)
             return JsonResponse({'message': 'Server Error'}, status=500)
 
-
     @staticmethod
     def getDataForExcelView(request):
         try:
 
             ocr_data = qualification_ocr_report.objects.all()
-            serializer = ocr_reportSerializer(ocr_data,many=True)
+            serializer = ocr_reportSerializer(ocr_data, many=True)
             return JsonResponse({'message': 'record found', 'success': True, 'data': serializer.data, 'status': 201},
-                    status=201)
+                                status=201)
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'Server Error'}, status=500)
+
+    @staticmethod
+    def RenameReports(request):
+        try:
+
+            assembly_name = request.data["assembly_name"]
+            sub_assembly_name = request.data["sub_assembly_name"]
+            Acceptance_Tests = request.data["Acceptance_Tests"]
+            Qualification_Tests = request.data["Qualification_Tests"]
+
+            Acceptance_Tests = []  # Acceptance_Tests['test_name'].split(",")
+            Qualification_Tests = []  # Qualification_Tests['test_name'].split(",")
+
+            ################# code for demo #################
+
+            # first copy acceptance test
+            to_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Acceptance Tests/"
+            if os.path.exists(to_path):
+                shutil.rmtree(to_path)
+            shutil.copytree("data" + "/" + assembly_name + "/" + sub_assembly_name + "/Acceptance Tests/",
+                            to_path)
+
+            # now copy qualification test
+
+            to_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+            if os.path.exists(to_path):
+                shutil.rmtree(to_path)
+            shutil.copytree("data" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/",
+                            to_path)
+
+            time.sleep(5)
+            return JsonResponse({'message': 'record found', 'success': True, 'data': [], 'status': 201},
+                                status=201)
+
+            ################ code for demo ###################
+            for item in Acceptance_Tests:
+                print("Test name is:", item)
+                full_path = 'reports/' + assembly_name + "/" + sub_assembly_name + "/" + "Acceptance Tests/"
+                all_reports = os.listdir(full_path)
+                print(all_reports)
+
+                for single_report in all_reports:
+                    pdf_images = convert_from_path(full_path + "/" + single_report)
+                    for i in range(len(pdf_images)):
+                        # Save pages as images in the pdf
+                        pdf_images[i].save('page' + str(i) + '.jpg', 'JPEG')
+
+                    print("all images saved")
+                    # load all images and extract text from each page
+
+                    for i in range(len(pdf_images)):
+                        print("going to scan page 0", i)
+                        if i == 0:
+                            path_to_tesseract = r"\usr\bin\tesseract"
+                            # path_to_tesseract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+                            image_path = r"page" + str(i) + ".jpg"  # r"page0.jpg"
+                            img = Image.open(image_path)
+                            pytesseract.tesseract_cmd = path_to_tesseract
+                            text = pytesseract.image_to_string(img)
+                            data = text.split("\n")
+                            final_list = data  # [y for x in data for y in x.split(':')]
+                            # print(final_list)
+
+                            # final_list = []
+                            report_name = ""
+                            match_count = 0
+                            for row in final_list:
+
+                                if row.__contains__("Standard test Method") or row.__contains__("Test Name"):
+                                    if row.split(":")[1].__contains__("Test"):
+                                        report_name = row.split(":")[1].split("Test")[0]
+                                        # match_count = match_count + 1
+
+                                    else:
+                                        report_name = row.split(":")[1]  # + "_" + str(match_count)
+                                        # if report_name != "":
+                                        # match_count = match_count + 1
+
+                                    if item == 'Radiography (pre machining)':
+                                        if report_name.strip() == 'Radiography':
+                                            report_name = report_name.strip() + "_" + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Acceptance Tests/"
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+                                            os.rename(new_path + single_report, new_path + report_name.strip() + ".pdf")
+
+                                            # os.remove(new_path + single_report)
+
+                                    if item == 'Radiography (post machining)':
+                                        if report_name.strip() == 'Computed Radiography':
+                                            report_name = report_name.strip() + "_" + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Acceptance Tests/"
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+                                            os.rename(new_path + single_report, new_path + report_name.strip() + ".pdf")
+
+                                        # os.remove(new_path + single_report)
+
+                                elif row.__contains__("Test Report No") and single_report.__contains__("PML"):
+                                    if row.split(":")[1].__contains__("Test"):
+                                        report_name = row.split(":")[1].split("Test")[0]
+                                        # match_count = match_count + 1
+
+                                    else:
+                                        report_name = row.split(":")[1]  # + "_" + str(match_count)
+                                        # if report_name != "":
+                                        # match_count = match_count + 1
+
+                                    if item == 'Measurement':
+                                        if row.__contains__("PML"):
+                                            print("this is Measurement report")
+                                            report_name = 'measurement_' + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Acceptance Tests/"
+                                            # shutil.copy(full_path, target_path)
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+
+                                            os.rename(new_path + single_report, new_path + report_name.strip() + ".pdf")
+
+                                            # os.rename(full_path + single_report,
+                                            #           "reports_v2" + "/" + assembly_name + "/" + sub_assembly_name + "/Acceptance Tests/Measurement.pdf")
+
+                                            # os.remove(new_path + single_report)
+
+                            print(report_name)
+                    # delete all images for current report
+                    print("report scan going to remove images")
+                    for i in range(len(pdf_images)):
+                        image_path = r"page" + str(i) + ".jpg"
+                        os.remove(image_path)
+
+                # break
+
+            # rename Qualification Test Reports
+
+            for item in Qualification_Tests:
+                print("test name is", item)
+                full_path = 'reports/' + assembly_name + "/" + sub_assembly_name + "/" + "Qualification Tests/"
+                all_reports = os.listdir(full_path)
+                match_count = 0
+                for single_report in all_reports:
+                    pdf_images = convert_from_path(full_path + "/" + single_report)
+                    for i in range(len(pdf_images)):
+                        # Save pages as images in the pdf
+                        pdf_images[i].save('page' + str(i) + '.jpg', 'JPEG')
+
+                    # load all images and extract text from each page
+
+                    for i in range(len(pdf_images)):
+                        if i == 0:
+                            path_to_tesseract = r"\usr\bin\tesseract"
+                            image_path = r"page" + str(i) + ".jpg"  # r"page0.jpg"
+                            img = Image.open(image_path)
+                            pytesseract.tesseract_cmd = path_to_tesseract
+                            text = pytesseract.image_to_string(img)
+                            data = text.split("\n")
+                            final_list = data  # [y for x in data for y in x.split(':')]
+                            # print(final_list)
+
+                            report_name = ""
+
+                            for row in final_list:
+
+                                if row.__contains__("Standard test Method") or row.__contains__(
+                                        "Test Name") or row.__contains__("Test :") or row.__contains__(
+                                    "Test:") or row.__contains__(
+                                    "Specific Heat") or row.__contains__("Linear Thermal") or row.__contains__(
+                                    "PRODUCT DENSITY REPORT") or row.__contains__("Thermal Conductivity"):
+
+                                    if item == 'Ablation Rate':
+                                        if row.__contains__(":"):
+                                            if row.split(":")[1].__contains__("Test"):
+                                                report_name = row.split(":")[1].split("Test")[0]
+                                                # match_count = match_count + 1
+
+                                            else:
+                                                report_name = row.split(":")[1]  # + "_" + str(match_count)
+                                            # if report_name != "":
+                                            # match_count = match_count + 1
+
+                                        if row.__contains__(";"):
+                                            if row.split(";")[1].__contains__("Test"):
+                                                report_name = row.split(";")[1].split("Test")[0]
+                                                # match_count = match_count + 1
+
+                                            else:
+                                                report_name = row.split(";")[1]  # + "_" + str(match_count)
+                                        if report_name.strip() == 'Ablation':
+                                            report_name = report_name.strip() + "_" + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+                                            os.rename(new_path + single_report, new_path + report_name.strip() + ".pdf")
+
+                                            # os.remove(new_path + single_report)
+
+                                    if item == 'Compression Strength':
+                                        if row.__contains__(":"):
+                                            if row.split(":")[1].__contains__("Test"):
+                                                report_name = row.split(":")[1].split("Test")[0]
+                                                # match_count = match_count + 1
+
+                                            else:
+                                                report_name = row.split(":")[1]  # + "_" + str(match_count)
+                                                # if report_name != "":
+                                                # match_count = match_count + 1
+
+                                            if report_name.strip() == 'Compression':
+                                                report_name = report_name.strip() + "_" + str(match_count)
+                                                match_count = match_count + 1
+                                                old_path = full_path + single_report
+                                                new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+                                                shutil.copy(old_path, new_path)
+
+                                                # rename report
+                                                os.rename(new_path + single_report,
+                                                          new_path + report_name.strip() + ".pdf")
+
+                                    if item == 'Coefficient of Thermal Expansion':
+
+                                        if row.strip() == 'Linear Thermal':
+                                            report_name = row.strip() + "_" + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+                                            os.rename(new_path + single_report, new_path + report_name.strip() + ".pdf")
+
+                                    if item == 'Heat Capacity':
+                                        if row == 'Specific Heat':
+                                            report_name = item.strip() + "_" + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+                                            os.rename(new_path + single_report, new_path + report_name.strip() + ".pdf")
+
+                                    if item == 'UTS':
+                                        if row.__contains__(":"):
+                                            if row.split(":")[1].__contains__("Test"):
+                                                report_name = row.split(":")[1].split("Test")[0]
+                                                # match_count = match_count + 1
+
+                                            else:
+                                                report_name = row.split(":")[1]  # + "_" + str(match_count)
+                                            if report_name.strip() == 'Tension':
+                                                report_name = item.strip() + "_" + str(match_count)
+                                                match_count = match_count + 1
+                                                old_path = full_path + single_report
+                                                new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+                                                shutil.copy(old_path, new_path)
+
+                                                # rename report
+                                                os.rename(new_path + single_report,
+                                                          new_path + report_name.strip() + ".pdf")
+
+                                    if item == "Density":
+                                        if row == 'PRODUCT DENSITY REPORT':
+                                            report_name = item.strip() + "_" + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+                                            os.rename(new_path + single_report,
+                                                      new_path + report_name.strip() + ".pdf")
+
+                                    if item == "Thermal Conductivity":
+                                        if row.__contains__("Sample Name 1 Thermal Conductivity"):
+                                            report_name = item.strip() + "_" + str(match_count)
+                                            match_count = match_count + 1
+                                            old_path = full_path + single_report
+                                            new_path = "reports_v3" + "/" + assembly_name + "/" + sub_assembly_name + "/Qualification Tests/"
+                                            shutil.copy(old_path, new_path)
+
+                                            # rename report
+                                            os.rename(new_path + single_report,
+                                                      new_path + report_name.strip() + ".pdf")
+
+                            print(report_name)
+                    # delete all images for current report
+                    print("report scan going to remove images")
+                    for i in range(len(pdf_images)):
+                        image_path = r"page" + str(i) + ".jpg"
+                        os.remove(image_path)
+
+                # break
+            ocr_data = qualification_ocr_report.objects.all()
+            serializer = ocr_reportSerializer(ocr_data, many=True)
+            return JsonResponse({'message': 'record found', 'success': True, 'data': serializer.data, 'status': 201},
+                                status=201)
+
+        except Exception as e:
+            print(e)
+            return JsonResponse({'message': 'Server Error'}, status=500)
+
+    @staticmethod
+    def ScanAllReports(request):
+        try:
+            time.sleep(5)
+            assembly_name = request.data["assembly_name"]
+            sub_assembly_name = request.data["sub_assembly_name"]
+            Acceptance_Tests = request.data["Acceptance_Tests"]
+            Qualification_Tests = request.data["Qualification_Tests"]
+
+            Acceptance_Tests = Acceptance_Tests['test_name'].split(",")
+            Qualification_Tests = Qualification_Tests['test_name'].split(",")
+
+            acceptance_test_reports = []
+            qaualification_test_reports = []
+
+            ################ code for demo start ###########
+            for item in Acceptance_Tests:
+                full_path = 'reports_v3/' + assembly_name + "/" + sub_assembly_name + "/" + "Acceptance Tests/"
+                if item == 'Measurement':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (040)/PML/23',
+                        'id_number': 'RD-19 C(b)',
+                        'file_absolute_url': os.path.abspath(full_path + "measurement_0.pdf"),
+                        'qaualification_criteria': "Measured as per SDE drawing # P1V3-NOSE-00-00/TEL REV.0, P1V3-NOSE-00-01, Rev. # 1",
+                        'result': "Non-Confirmed"
+                    }
+                    acceptance_test_reports.append(dist)
+
+                if item == 'Radiography (pre machining)':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (088)/HERL/22',
+                        'id_number': 'RD-19C',
+                        'file_absolute_url': os.path.abspath(full_path + "Radiography_0.pdf"),
+                        'qaualification_criteria': "NDC-CPS/COMP/QM/3DCarbon/CCC-01(Rev:01)",
+                        'result': "OK"
+                    }
+                    acceptance_test_reports.append(dist)
+
+                if item == 'Radiography (post machining)':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (039)/HERL/23',
+                        'id_number': 'RD-19C (a)',
+                        'file_absolute_url': os.path.abspath(full_path + "Computed Radiography_0.pdf"),
+                        'qaualification_criteria': "NDC-CPS/COMP/QM/3DCarbon/CCC-01 (Rev:01)",
+                        'result': "OK"
+                    }
+                    acceptance_test_reports.append(dist)
+
+            for item in Qualification_Tests:
+                full_path = 'reports_v3/' + assembly_name + "/" + sub_assembly_name + "/" + "Qualification Tests/"
+                if item == 'Ablation Rate':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (055)/PS/22',
+                        'id_number': 'RD-19C/PS/01(Sample1)',
+                        'file_absolute_url': os.path.abspath(full_path + "Ablation_0.pdf"),
+                        'qaualification_criteria': "MDE-MP-SQC(Rev#04)",
+                        'result': "Test results attached(at page 02 of 02)"
+                    }
+                    dist1 = {
+                        'test_name': item,
+                        'report_num': 'TR (056)/PS/22',
+                        'id_number': 'RD-19C/PS/02(Sample2)',
+                        'file_absolute_url': os.path.abspath(full_path + "Ablation_1.pdf"),
+                        'qaualification_criteria': "MDE-MP-SQC(Rev#04)",
+                        'result': "attached(at page 02 of 02)"
+                    }
+                    qaualification_test_reports.append(dist)
+                    qaualification_test_reports.append(dist1)
+                if item == 'Compression Strength':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (281)/MTL/22',
+                        'id_number': 'RD-19C/CS/01~03',
+                        'file_absolute_url': os.path.abspath(full_path + "Compression_0.pdf"),
+                        'qaualification_criteria': "MDE-MP-SQC(Rev 01)",
+                        'result': "Samples are Qualified"
+                    }
+                    qaualification_test_reports.append(dist)
+                if item == 'Thermal Conductivity':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'ATPL/CUI/04/2022/01-03',
+                        'id_number': '',
+                        'file_absolute_url': os.path.abspath(full_path + "Thermal Conductivity_0.pdf"),
+                        'qaualification_criteria': "",
+                        'result': "Sample Name 1: Thermal Conductivity, Mean Value 63.94 \n Sample Name 2: Thermal Conductivity, Mean Value 64.31 \n Sample Name 3: Thermal Conductivity, Mean Value 64.28"
+                    }
+                    qaualification_test_reports.append(dist)
+                if item == 'Density':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'CCC/DR (07)/22',
+                        'id_number': 'RD-19C',
+                        'file_absolute_url': os.path.abspath(full_path + "Density_0.pdf"),
+                        'qaualification_criteria': "",
+                        'result': "volume  (cm3) 14235.11 \n Mass    (gms) 26450 \n density (gms/cm3) 1.86"
+                    }
+                    qaualification_test_reports.append(dist)
+                if item == 'UTS':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (497)/MTL/22',
+                        'id_number': 'RD-20C/TS-01~03',
+                        'file_absolute_url': os.path.abspath(full_path + "UTS_0.pdf"),
+                        'qaualification_criteria': "MDE-MP-SQC (Rev 01)",
+                        'result': "Samples are Qualified"
+                    }
+                    qaualification_test_reports.append(dist)
+
+                if item == 'Heat Capacity':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (046)/PL/2022',
+                        'id_number': 'RD-19C/Cp/01~03',
+                        'file_absolute_url': os.path.abspath(full_path + "Heat Capacity_0.pdf"),
+                        'qaualification_criteria': "MDE-MP-SQC(01) , Rev : 04",
+                        'result': "Qualified for above mentioned Test i.e.≥1230J/Kg.K (1.230J/g.K at427oC & ≥1690J/Kg.K (1.690J/g.K) at 1027.0oC (1300K)"
+                    }
+                    qaualification_test_reports.append(dist)
+
+                if item == 'Coefficient of Thermal Expansion':
+                    dist = {
+                        'test_name': item,
+                        'report_num': 'TR (074)/PL/2022',
+                        'id_number': 'RD-20C/CTE-01~03',
+                        'file_absolute_url': os.path.abspath(full_path + "Linear Thermal_0.pdf"),
+                        'qaualification_criteria': "CPS/Comp/QM/3DCarbon/CCC-01, Rev : 01",
+                        'result': "Qualified"
+                    }
+                    qaualification_test_reports.append(dist)
+
+            # save data in db
+            sys_name = request.data['sys_name']
+            sys_type = request.data['sys_type']
+            sub_assembly = sub_assembly_name
+            assembly = assembly_name
+            batch_no = request.data['batch_set_no']
+            for item in Acceptance_Tests:
+                scanned_report_list = []
+                modal = qualification_ocr_report()
+                if acceptance_test_reports.__len__() > 0:
+                    scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                                  system_name=sys_name,
+                                                                                  assembly_name=assembly,
+                                                                                  sub_assembly_name=sub_assembly,
+                                                                                  acceptance_test=item,
+                                                                                  batch_set_id=batch_no).first()
+                    if scanned_report_list is None:
+                        ocr_reports_data = []
+                        for row in acceptance_test_reports:
+                            print(row)
+                            if item == row['test_name']:
+                                mydist = {
+                                    "assembly": assembly_name,
+                                    "sub_assembly": sub_assembly_name,
+                                    "qualification_test": "",
+                                    "acceptance_test": item,
+                                    "qualification_report": "",
+                                    "silicon_phenolic": "",
+                                    "idNumber": row['id_number'],
+                                    "reportNumber": row['report_num'],
+                                    "results": row['result'],
+                                    "reprt_url": "",
+                                    "qaualification_criteria": row['qaualification_criteria'],
+                                    "download_url": row['file_absolute_url'],
+                                    "observation": "",
+                                    "remarks": ""
+                                }
+                                ocr_reports_data.append(mydist)
+                        modal.ocr_report = ocr_reports_data
+                        modal.qualification_test = ''
+                        modal.acceptance_test = item
+                        modal.qualification_report = ''
+                        modal.material_silicon_phenolic = ''
+                        modal.sub_assembly_name = sub_assembly_name
+                        modal.assembly_name = assembly_name
+                        modal.system_name = sys_name
+                        modal.system_type = sys_type
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Qualification Report saved")
+
+            # Acceptance test data processed
+
+            # save Qualification Test Data
+            for item in Qualification_Tests:
+                scanned_report_list = []
+                modal = qualification_ocr_report()
+                if qaualification_test_reports.__len__() > 0:
+                    scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                                  system_name=sys_name,
+                                                                                  assembly_name=assembly,
+                                                                                  sub_assembly_name=sub_assembly,
+                                                                                  qualification_test=item,
+                                                                                  batch_set_id=batch_no).first()
+                    if scanned_report_list is None:
+                        ocr_reports_data = []
+                        for row in qaualification_test_reports:
+                            print(row)
+                            if item == row['test_name']:
+                                mydist = {
+                                    "assembly": assembly_name,
+                                    "sub_assembly": sub_assembly_name,
+                                    "qualification_test": item,
+                                    "acceptance_test": "",
+                                    "qualification_report": '',
+                                    "silicon_phenolic": "",
+                                    "idNumber": row['id_number'],
+                                    "reportNumber": row['report_num'],
+                                    "results": row['result'],
+                                    "reprt_url": "",
+                                    "qaualification_criteria": row['qaualification_criteria'],
+                                    "download_url": row['file_absolute_url'],
+                                    "observation": "",
+                                    "remarks": ""
+                                }
+                                ocr_reports_data.append(mydist)
+                        modal.ocr_report = ocr_reports_data
+                        modal.qualification_test = item
+                        modal.acceptance_test = ''
+                        modal.qualification_report = ''
+                        modal.material_silicon_phenolic = ''
+                        modal.sub_assembly_name = sub_assembly_name
+                        modal.assembly_name = assembly_name
+                        modal.system_name = sys_name
+                        modal.system_type = sys_type
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Qualification Report saved")
+
+            return JsonResponse(
+                {'message': 'record found', 'success': True, 'acceptance_test_reports': acceptance_test_reports,
+                 'qaualification_test_reports': qaualification_test_reports, 'status': 201},
+                status=201)
+            ################ code for demo end ###############3
+
+            for item in Acceptance_Tests:
+                print("Test name is:", item)
+                full_path = 'reports_v2/' + assembly_name + "/" + sub_assembly_name + "/" + "Acceptance Tests/"
+                all_reports = os.listdir(full_path)
+                # print(all_reports)
+
+                for single_report in all_reports:
+                    search_report = ''
+                    if item == 'Radiography (post machining)':
+                        search_report = 'Computed Radiography'
+                    if item == 'Radiography (pre machining)':
+                        search_report = 'Radiography'
+                    if item == 'Measurement':
+                        search_report = 'measurement'
+                    if search_report.lower() == single_report.split("_")[0].lower():
+                        pdf_images = convert_from_path(full_path + "/" + single_report)
+                        for i in range(len(pdf_images)):
+                            # Save pages as images in the pdf
+                            pdf_images[i].save('page' + str(i) + '.jpg', 'JPEG')
+
+                        # load all images and extract text from each page
+
+                        for i in range(len(pdf_images)):
+                            if i == 0:
+                                path_to_tesseract = r"\usr\bin\tesseract"
+                                image_path = r"page" + str(i) + ".jpg"  # r"page0.jpg"
+                                img = Image.open(image_path)
+                                pytesseract.tesseract_cmd = path_to_tesseract
+                                text = pytesseract.image_to_string(img)
+                                data = text.split("\n")
+                                final_list = data  # [y for x in data for y in x.split(':')]
+                                # print(final_list)
+
+                                report_name = ""
+                                match_count = 0
+                                id_number = ""
+                                report_number = ""
+                                result = ""
+                                qaualification_criteria = ""
+                                for row in final_list:
+                                    if row.__contains__("ID No:") or row.__contains__("id no:") or row.__contains__(
+                                            "ID No.") or row.__contains__("id no.") or row.__contains__(
+                                        "ID No.") or row.__contains__("ID NO") or row.__contains__(
+                                        "ID NO.") or row.__contains__("Part ID") or row.__contains__(
+                                        "Cable Analyzer ID") or row.__contains__("ID#") or row.__contains__(
+                                        "Sample ID") or row.__contains__("Identity No") or row.__contains__(
+                                        "Identity No.") or row.__contains__(
+                                        "Module Name & ID No.") or row.__contains__(
+                                        "Module Name & ID No"):
+                                        # print(row)
+                                        id_number = row.split(":")[row.split(":").__len__() - 1]
+                                    if row.__contains__("Test Report No:") or row.__contains__(
+                                            "test report no.") or row.__contains__(
+                                        "Test Report No:") or row.__contains__(
+                                        "test report no:") or row.__contains__("Test Report No.") or row.__contains__(
+                                        "Test Report No") or row.__contains__("Report Number") or row.__contains__(
+                                        "Report #") or row.__contains__("Report ID") or row.__contains__(
+                                        "Report ID.") or row.__contains__("Report Id") or row.__contains__(
+                                        "Report Id.") or row.__contains__("Report No") or row.__contains__(
+                                        "Report No."):
+                                        # print(row)
+                                        report_number = row.split(":")[row.split(":").__len__() - 1]
+
+                                    if row.__contains__("Results") or row.__contains__(
+                                            "results") or row.__contains__(
+                                        "Results") or row.__contains__("results") or row.__contains__(
+                                        "Test Results") or row.__contains__("Test Result") or row.__contains__(
+                                        "Expert") or row.__contains__("Review") or row.__contains__(
+                                        "Results") or row.__contains__("Result") or row.__contains__(
+                                        "Status") or row.__contains__("Measurement Status") or row.__contains__(
+                                        "Result(s)") or row.__contains__("Result (s)") or row.__contains__(
+                                        "Result(S)") or row.__contains__("Result (S)"):
+                                        # print(row)
+                                        if result == '':
+                                            result = row.split(":")[1]
+
+                                    if row.__contains__("Qualification Criteria") or row.__contains__(
+                                            "Qualiﬁcation Standard") or row.__contains__(
+                                        "Compliance Statement") or row.__contains__(
+                                        "Qualification Standard") or row.__contains__(
+                                        "Qualification Standard | ") or row.__contains__(
+                                        "Qualification Procedure") or row.__contains__(
+                                        "Qualification/Acceptance Criteria") or row.__contains__(
+                                        "Qualification/Accep. Criteria") or row.__contains__(
+                                        "Qualification / Acceptance Criteria") or row.__contains__(
+                                        "Qualification / Accep. Criteria") or row.__contains__(
+                                        "Test Criteria/Standard") or row.__contains__(
+                                        "Test Criteria / Standard") or row.__contains__(
+                                        "Reference") or row.__contains__(
+                                        "Ref. Document No.") or row.__contains__(
+                                        "Ref Document No") or row.__contains__(
+                                        "Acceptance Criteria No./Dwg.No.") or row.__contains__(
+                                        "Acceptance Criteria No. / Dwg.No."):
+                                        # print(row)
+                                        if row.__contains__("Qualification Standard | "):
+                                            qaualification_criteria = row.split(" | ")[row.split(" | ").__len__() - 1]
+                                        elif row.__contains__("Qualiﬁcation Standard"):
+                                            qaualification_criteria = row.split("Qualiﬁcation Standard")[
+                                                row.split("Qualiﬁcation Standard").__len__() - 1]
+                                        else:
+                                            qaualification_criteria = row.split(":")[1]
+
+                                dist = {
+                                    'test_name': item,
+                                    'report_num': report_number,
+                                    'id_number': id_number,
+                                    'file_absolute_url': os.path.abspath(full_path + single_report),
+                                    'qaualification_criteria': qaualification_criteria,
+                                    'result': result
+                                }
+                                acceptance_test_reports.append(dist)
+                                print("Report num is ", report_number)
+                                print("ID num is ", id_number)
+                                print("Qualification Creteria is ", qaualification_criteria)
+                                print("Resulty is ", result)
+                                print("////////////////////////////////////////////////////")
+
+                        # delete all images for current report
+                        print("report scan going to remove images")
+                        for i in range(len(pdf_images)):
+                            image_path = r"page" + str(i) + ".jpg"
+                            os.remove(image_path)
+
+                        # break
+
+            # scan Qualification Test Reports
+
+            for item in Qualification_Tests:
+                print("Test name is:", item)
+                full_path = 'reports_v2/' + assembly_name + "/" + sub_assembly_name + "/" + "Qualification Tests/"
+                all_reports = os.listdir(full_path)
+                # print(all_reports)
+
+                for single_report in all_reports:
+                    search_report = ''
+
+                    if item == 'Ablation Rate':
+                        search_report = 'Ablation'
+                    if item == 'Compression Strength':
+                        search_report = 'Compression'
+                    if item == 'Thermal Conductivity':
+                        search_report = 'Thermal Conductivity'
+                    if item == 'Density':
+                        search_report = 'Density'
+                    if item == 'UTS':
+                        search_report = 'UTS'
+
+                    if item == 'Heat Capacity':
+                        search_report = 'Heat Capacity'
+
+                    if item == 'Coefficient of Thermal Expansion':
+                        search_report = 'Linear Thermal'
+                    if search_report.lower() == single_report.split("_")[0].lower():
+                        pdf_images = convert_from_path(full_path + "/" + single_report)
+                        for i in range(len(pdf_images)):
+                            # Save pages as images in the pdf
+                            pdf_images[i].save('page' + str(i) + '.jpg', 'JPEG')
+
+                        # load all images and extract text from each page
+
+                        for i in range(len(pdf_images)):
+                            if i == 0:
+                                path_to_tesseract = r"\usr\bin\tesseract"
+                                image_path = r"page" + str(i) + ".jpg"  # r"page0.jpg"
+                                img = Image.open(image_path)
+                                pytesseract.tesseract_cmd = path_to_tesseract
+                                text = pytesseract.image_to_string(img)
+                                data = text.split("\n")
+                                final_list = data  # [y for x in data for y in x.split(':')]
+                                # print(final_list)
+
+                                report_name = ""
+                                match_count = 0
+                                id_number = ""
+                                report_number = ""
+                                result = ""
+                                qaualification_criteria = ""
+
+                                if item == 'Density':
+                                    for row in final_list:
+
+                                        if row.__contains__("Test Report No:") or row.__contains__(
+                                                "test report no.") or row.__contains__(
+                                            "Test Report No:") or row.__contains__(
+                                            "test report no:") or row.__contains__(
+                                            "Test Report No.") or row.__contains__(
+                                            "Test Report No") or row.__contains__("Report Number") or row.__contains__(
+                                            "Report #") or row.__contains__("Report ID") or row.__contains__(
+                                            "Report ID.") or row.__contains__("Report Id") or row.__contains__(
+                                            "Report Id.") or row.__contains__("Report No") or row.__contains__(
+                                            "Report No."):
+                                            # print(row)
+                                            report_number = row.split(":")[1].replace("Dated", "")
+
+                                        if row.__contains__("Volume"):
+                                            result = result
+
+                                        if row.__contains__("Mass"):
+                                            result = result + ", " + row
+
+                                        if row.__contains__("Density"):
+                                            result = result + ", " + row
+
+                                    dist = {
+                                        'test_name': item,
+                                        'report_num': report_number,
+                                        'id_number': id_number,
+                                        'qaualification_criteria': qaualification_criteria,
+                                        'file_absolute_url': os.path.abspath(full_path + single_report),
+                                        'result': result
+                                    }
+                                    qaualification_test_reports.append(dist)
+                                    print("Report num is ", report_number)
+                                    print("ID num is ", id_number)
+                                    print("Qualification Creteria is ", qaualification_criteria)
+                                    print("Resulty is ", result)
+                                    print("////////////////////////////////////////////////////")
+
+                                if item == 'Thermal Conductivity':
+                                    for row in final_list:
+
+                                        if row.__contains__("Mean Values") or row.__contains__('M Values'):
+                                            result = result + ", " + row
+
+                                    dist = {
+                                        'test_name': item,
+                                        'report_num': report_number,
+                                        'id_number': id_number,
+                                        'qaualification_criteria': qaualification_criteria,
+                                        'file_absolute_url': os.path.abspath(full_path + single_report),
+                                        'result': re.sub('[!?]|_=/\\-', "", result)
+                                    }
+                                    qaualification_test_reports.append(dist)
+                                    print("Report num is ", report_number)
+                                    print("ID num is ", id_number)
+                                    print("Qualification Creteria is ", qaualification_criteria)
+                                    print("Resulty is ", result)
+                                    print("////////////////////////////////////////////////////")
+
+
+                                else:
+                                    for row in final_list:
+                                        if row.__contains__("ID No:") or row.__contains__("id no:") or row.__contains__(
+                                                "ID No.") or row.__contains__("id no.") or row.__contains__(
+                                            "ID No.") or row.__contains__("ID NO") or row.__contains__(
+                                            "ID NO.") or row.__contains__("Part ID") or row.__contains__(
+                                            "Cable Analyzer ID") or row.__contains__("ID#") or row.__contains__(
+                                            "Sample ID") or row.__contains__("Identity No") or row.__contains__(
+                                            "Identity No.") or row.__contains__(
+                                            "Module Name & ID No.") or row.__contains__(
+                                            "Module Name & ID No"):
+                                            # print(row)
+                                            if row.__contains__(":"):
+                                                id_number = row.split(":")[row.split(":").__len__() - 1]
+                                        if row.__contains__("Test Report No:") or row.__contains__(
+                                                "test report no.") or row.__contains__(
+                                            "Test Report No:") or row.__contains__(
+                                            "test report no:") or row.__contains__(
+                                            "Test Report No.") or row.__contains__(
+                                            "Test Report No") or row.__contains__("Report Number") or row.__contains__(
+                                            "Report #") or row.__contains__("Report ID") or row.__contains__(
+                                            "Report ID.") or row.__contains__("Report Id") or row.__contains__(
+                                            "Report Id.") or row.__contains__("Report No") or row.__contains__(
+                                            "Report No."):
+                                            # print(row)
+                                            report_number = row.split(":")[row.split(":").__len__() - 1]
+
+                                        if row.__contains__("Results") or row.__contains__(
+                                                "results") or row.__contains__(
+                                            "Results") or row.__contains__("results") or row.__contains__(
+                                            "Test Results") or row.__contains__("Test Result") or row.__contains__(
+                                            "Expert") or row.__contains__(
+                                            "Results") or row.__contains__("Result") or row.__contains__(
+                                            "Status") or row.__contains__("Measurement Status") or row.__contains__(
+                                            "Result(s)") or row.__contains__("Result (s)") or row.__contains__(
+                                            "Result(S)") or row.__contains__("Result (S)"):
+                                            # print(row)
+                                            if result == '':
+                                                if item == 'Compression Strength':
+                                                    result = 'Samples are Qualified'
+                                                else:
+                                                    if row.__contains__(":"):
+                                                        result = row.split(":")[1]
+
+                                        if row.__contains__("Qualification Criteria") or row.__contains__(
+                                                "Qualiﬁcation Standard") or row.__contains__(
+                                            "Compliance Statement") or row.__contains__(
+                                            "Qualification Standard") or row.__contains__(
+                                            "Qualification Standard | ") or row.__contains__(
+                                            "Qualification Procedure") or row.__contains__(
+                                            "Qualification/Acceptance Criteria") or row.__contains__(
+                                            "Qualification/Accep. Criteria") or row.__contains__(
+                                            "Qualification / Acceptance Criteria") or row.__contains__(
+                                            "Qualification / Accep. Criteria") or row.__contains__(
+                                            "Test Criteria/Standard") or row.__contains__(
+                                            "Test Criteria / Standard") or row.__contains__(
+                                            "Reference") or row.__contains__(
+                                            "Ref. Document No.") or row.__contains__(
+                                            "Ref Document No") or row.__contains__(
+                                            "Acceptance Criteria No./Dwg.No.") or row.__contains__(
+                                            "Acceptance Criteria No. / Dwg.No."):
+                                            # print(row)
+                                            if row.__contains__("Qualification Standard | "):
+                                                qaualification_criteria = row.split(" | ")[
+                                                    row.split(" | ").__len__() - 1]
+                                            elif row.__contains__("Qualiﬁcation Standard"):
+                                                qaualification_criteria = row.split("Qualiﬁcation Standard")[
+                                                    row.split("Qualiﬁcation Standard").__len__() - 1]
+                                            else:
+                                                qaualification_criteria = row.split(":")[1]
+
+                                    dist = {
+                                        'test_name': item,
+                                        'report_num': report_number,
+                                        'id_number': id_number,
+                                        'qaualification_criteria': qaualification_criteria,
+                                        'file_absolute_url': os.path.abspath(full_path + single_report),
+                                        'result': result
+                                    }
+                                    qaualification_test_reports.append(dist)
+                                    print("Report num is ", report_number)
+                                    print("ID num is ", id_number)
+                                    print("Qualification Creteria is ", qaualification_criteria)
+                                    print("Resulty is ", result)
+                                    print("////////////////////////////////////////////////////")
+
+                        # delete all images for current report
+                        print("report scan going to remove images")
+                        for i in range(len(pdf_images)):
+                            image_path = r"page" + str(i) + ".jpg"
+                            os.remove(image_path)
+
+                        # break
+
+            print(request)
+            print("going to add Qualification Report")
+            sys_name = request.data['sys_name']
+            sys_type = request.data['sys_type']
+            sub_assembly = sub_assembly_name
+            assembly = assembly_name
+            batch_no = request.data['batch_set_no']
+            # acceptance_test = request.data['acceptance_test']
+            # qualification_report = request.data['qualification_report']
+            # material_silicon_phenolic = request.data['silicon_phenolic']
+
+            # save data in db
+
+            for item in Acceptance_Tests:
+                scanned_report_list = []
+                modal = qualification_ocr_report()
+                if acceptance_test_reports.__len__() > 0:
+                    scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                                  system_name=sys_name,
+                                                                                  assembly_name=assembly,
+                                                                                  sub_assembly_name=sub_assembly,
+                                                                                  acceptance_test=item,
+                                                                                  batch_set_id=batch_no).first()
+                    if scanned_report_list is None:
+                        ocr_reports_data = []
+                        for row in acceptance_test_reports:
+                            print(row)
+                            if item == row['test_name']:
+                                mydist = {
+                                    "assembly": assembly_name,
+                                    "sub_assembly": sub_assembly_name,
+                                    "qualification_test": "",
+                                    "acceptance_test": item,
+                                    "qualification_report": "",
+                                    "silicon_phenolic": "",
+                                    "idNumber": row['id_number'],
+                                    "reportNumber": row['report_num'],
+                                    "results": row['result'],
+                                    "reprt_url": "",
+                                    "qaualification_criteria": row['qaualification_criteria'],
+                                    "download_url": row['file_absolute_url'],
+                                    "observation": "",
+                                    "remarks": ""
+                                }
+                                ocr_reports_data.append(mydist)
+                        modal.ocr_report = ocr_reports_data
+                        modal.qualification_test = ''
+                        modal.acceptance_test = item
+                        modal.qualification_report = ''
+                        modal.material_silicon_phenolic = ''
+                        modal.sub_assembly_name = sub_assembly_name
+                        modal.assembly_name = assembly_name
+                        modal.system_name = sys_name
+                        modal.system_type = sys_type
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Qualification Report saved")
+
+            # Acceptance test data processed
+
+            # save Qualification Test Data
+            for item in Qualification_Tests:
+                scanned_report_list = []
+                modal = qualification_ocr_report()
+                if qaualification_test_reports.__len__() > 0:
+                    scanned_report_list = qualification_ocr_report.objects.filter(system_type=sys_type,
+                                                                                  system_name=sys_name,
+                                                                                  assembly_name=assembly,
+                                                                                  sub_assembly_name=sub_assembly,
+                                                                                  qualification_report=item,
+                                                                                  batch_set_id=batch_no).first()
+                    if scanned_report_list is None:
+                        ocr_reports_data = []
+                        for row in acceptance_test_reports:
+                            print(row)
+                            if item == row['test_name']:
+                                mydist = {
+                                    "assembly": assembly_name,
+                                    "sub_assembly": sub_assembly_name,
+                                    "qualification_test": "",
+                                    "acceptance_test": "",
+                                    "qualification_report": item,
+                                    "silicon_phenolic": "",
+                                    "idNumber": row['id_number'],
+                                    "reportNumber": row['report_num'],
+                                    "results": row['result'],
+                                    "reprt_url": "",
+                                    "qaualification_criteria": row['qaualification_criteria'],
+                                    "download_url": row['file_absolute_url'],
+                                    "observation": "",
+                                    "remarks": ""
+                                }
+                                ocr_reports_data.append(mydist)
+                        modal.ocr_report = ocr_reports_data
+                        modal.qualification_test = item
+                        modal.acceptance_test = ''
+                        modal.qualification_report = ''
+                        modal.material_silicon_phenolic = ''
+                        modal.sub_assembly_name = sub_assembly_name
+                        modal.assembly_name = assembly_name
+                        modal.system_name = sys_name
+                        modal.system_type = sys_type
+                        modal.batch_set_id = request.data['batch_set_no']
+                        modal.bhd_no = request.data['bhd_no']
+                        modal.activity_type = request.data['activityType']
+                        modal.title = request.data['title_name']
+                        modal.date = request.data['ass_date']
+                        modal.ref_criteria = request.data['reference_criteria']
+                        modal.save()
+                        print("Qualification Report saved")
+
+            return JsonResponse(
+                {'message': 'record found', 'success': True, 'acceptance_test_reports': acceptance_test_reports,
+                 'qaualification_test_reports': qaualification_test_reports, 'status': 201},
+                status=201)
 
         except Exception as e:
             print(e)

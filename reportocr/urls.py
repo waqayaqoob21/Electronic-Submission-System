@@ -44,4 +44,7 @@ urlpatterns = [
 
     path('getDataForExcelView/', getDataForExcelViewAPIView.as_view(), name='getDataForExcelView'),
 
+    path('RenameReports/', RenameReportsAPIView.as_view(), name='RenameReports'),
+    path('ScanAllReports/', ScanAllReportsAPIView.as_view(), name='ScanAllReports'),
+
 ]
