@@ -89,9 +89,9 @@ CORS_ORIGIN_WHITELIST = [
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'ocr_db_v2',
+        'NAME': 'ocr_db',
         'USER': 'postgres',
-        'PASSWORD': '1234', #abc123**
+        'PASSWORD': 'abc123**', #abc123**
         'HOST': 'localhost',
         'PORT': '5432',
  }
